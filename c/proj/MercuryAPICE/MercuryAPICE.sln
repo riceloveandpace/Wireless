@@ -1,0 +1,83 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MercuryAPICE", "MercuryAPICE\MercuryAPICE.vcproj", "{6573E688-6A77-4CE7-BD99-7E5DE755D354}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample_WinCE", "Sample_WinCE\Sample_WinCE.vcproj", "{0A7B621B-BF93-4AF8-A6AB-E3D825216052}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354} = {6573E688-6A77-4CE7-BD99-7E5DE755D354}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ReadAsync", "ReadAsync\ReadAsync.vcproj", "{3005B8CD-D400-41B5-A68A-633FEBBABBA1}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354} = {6573E688-6A77-4CE7-BD99-7E5DE755D354}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Pocket PC 2003 (ARMV4) = Debug|Pocket PC 2003 (ARMV4)
+		Debug|Smartphone 2003 (ARMV4) = Debug|Smartphone 2003 (ARMV4)
+		Debug|Windows Mobile 6 Professional SDK (ARMV4I) = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		Release|Pocket PC 2003 (ARMV4) = Release|Pocket PC 2003 (ARMV4)
+		Release|Smartphone 2003 (ARMV4) = Release|Smartphone 2003 (ARMV4)
+		Release|Windows Mobile 6 Professional SDK (ARMV4I) = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Pocket PC 2003 (ARMV4).Build.0 = Debug|Pocket PC 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Smartphone 2003 (ARMV4).ActiveCfg = Debug|Smartphone 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Smartphone 2003 (ARMV4).Build.0 = Debug|Smartphone 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Smartphone 2003 (ARMV4).Deploy.0 = Debug|Smartphone 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Deploy.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release|Pocket PC 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Pocket PC 2003 (ARMV4).Build.0 = Release|Pocket PC 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Release|Pocket PC 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Smartphone 2003 (ARMV4).ActiveCfg = Release|Smartphone 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Smartphone 2003 (ARMV4).Build.0 = Release|Smartphone 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Smartphone 2003 (ARMV4).Deploy.0 = Release|Smartphone 2003 (ARMV4)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{6573E688-6A77-4CE7-BD99-7E5DE755D354}.Release|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Pocket PC 2003 (ARMV4).Build.0 = Debug|Pocket PC 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Smartphone 2003 (ARMV4).ActiveCfg = Debug|Smartphone 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Smartphone 2003 (ARMV4).Build.0 = Debug|Smartphone 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Smartphone 2003 (ARMV4).Deploy.0 = Debug|Smartphone 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Deploy.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release|Pocket PC 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Pocket PC 2003 (ARMV4).Build.0 = Release|Pocket PC 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Release|Pocket PC 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Smartphone 2003 (ARMV4).ActiveCfg = Release|Smartphone 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Smartphone 2003 (ARMV4).Build.0 = Release|Smartphone 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Smartphone 2003 (ARMV4).Deploy.0 = Release|Smartphone 2003 (ARMV4)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{0A7B621B-BF93-4AF8-A6AB-E3D825216052}.Release|Windows Mobile 6 Professional SDK (ARMV4I).Deploy.0 = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Pocket PC 2003 (ARMV4).ActiveCfg = Debug|Pocket PC 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Pocket PC 2003 (ARMV4).Build.0 = Debug|Pocket PC 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Pocket PC 2003 (ARMV4).Deploy.0 = Debug|Pocket PC 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Smartphone 2003 (ARMV4).ActiveCfg = Debug|Smartphone 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Smartphone 2003 (ARMV4).Build.0 = Debug|Smartphone 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Smartphone 2003 (ARMV4).Deploy.0 = Debug|Smartphone 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Debug|Windows Mobile 6 Professional SDK (ARMV4I).Deploy.0 = Debug|Windows Mobile 6 Professional SDK (ARMV4I)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Pocket PC 2003 (ARMV4).ActiveCfg = Release|Pocket PC 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Pocket PC 2003 (ARMV4).Build.0 = Release|Pocket PC 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Pocket PC 2003 (ARMV4).Deploy.0 = Release|Pocket PC 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Smartphone 2003 (ARMV4).ActiveCfg = Release|Smartphone 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Smartphone 2003 (ARMV4).Build.0 = Release|Smartphone 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Smartphone 2003 (ARMV4).Deploy.0 = Release|Smartphone 2003 (ARMV4)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Windows Mobile 6 Professional SDK (ARMV4I).ActiveCfg = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Windows Mobile 6 Professional SDK (ARMV4I).Build.0 = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+		{3005B8CD-D400-41B5-A68A-633FEBBABBA1}.Release|Windows Mobile 6 Professional SDK (ARMV4I).Deploy.0 = Release|Windows Mobile 6 Professional SDK (ARMV4I)
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,155 @@
+Date: 6/14/2016
+
+INFO:
+====
+This README.STM32 file provides the information about
+    
+	- Microcontroler
+	- Bare metal code organisation in MercuryAPI distribution.
+	- How to build and run the sample application on Embedded Pi.
+	- ThingMagic Reader and Embedded Pi setup connections.
+	- Size distribution of code for bare metal api.
+==============	
+Microcontroler
+==============
+In this project(stm32_bare_metal_api.uvprojx) we are using STM32F103RB microcontroller.It is from
+STM32F103xx medium-density performance line family incorporates the
+high-performance ARM Cortex-M3 32-bit RISC core operating at a 72 MHz 
+frequency.
+
+=======================================================
+Bare metal code organisation in MercuryAPI distribution:
+=======================================================
+
+The Mercury C API is designed to be ported and run on a wide variety
+of runtime environments, ranging from full host operating systems to
+bare-metal embedded platforms. Due to the widely varying capabilites
+of such systems and the mechanisms by which they are provided, the API
+has specific hooks in place for the services it needs. 
+
+A few operations involving time and timestamps must be provided by the
+user if they are not building on a POSIX host system. The file osdep.h
+describes the timer and sleep functions that the host must supply for
+correct operation of the API. The file osdep_stm32F103RB.c contains stub
+implementations that are required for providing timer and sleep functions
+for STM32. 
+
+In order to communicate with a serial reader, the API must be provided
+with a set of routines that transmit and recieve bytes, set the baud
+rate, and so on. The file serial_transport_stm32F103RB.c provides all basic
+stub implementation that are required in order to communicate with STM32.
+ 
+The file "tm_config.h" in the sources contains #define statements that
+enable particular features of the C API. Some features need to be
+disabled if the target platform does not have the relevant
+infrastructure support - the LLRP serial transport requires BSD
+socket-style networking, and the background reads feature requires
+POSIX threads. Disabling features will also reduce the footprint of
+the compiled code, and reducing the feature set to the minimum
+necessary is recommended for small platforms. The following features
+are enabled/disabled for bare metal platforms:
+
+
+ENABLED:
+=======
+
+   TMR_ENABLE_SERIAL_READER_ONLY
+
+Define this to enable support for small microcontrollers.
+Enabling this option will reduce the code which is not relevant to 
+serial readers in order to minimize the program footprint
+To compile for Serial Reader only.
+  
+
+DISABLED:
+========
+
+   TMR_ENABLE_GEN2_CUSTOM_TAGOPS
+
+Disabling this to disable support for the GEN2 Custom Tag Operations parameters
+and access commands
+ 
+ 
+   TMR_ENABLE_ISO180006B
+
+Disabling this to disable support for the ISO180006B protocol parameters
+and access commands
+
+ 
+   TMR_ENABLE_BACKGROUND_READS
+
+Disabling this to disable support for background reads using native threads.
+This feature does not exist in bare metal platform.
+
+
+   TMR_ENABLE_ERROR_STRINGS
+
+Undefining it saves the space of the error message strings and is recommended
+on embedded applications.
+ 
+ 
+   TMR_ENABLE_PARAM_STRINGS
+
+Disabling this to exclude TMR_paramName() and TMR_paramID().
+
+
+   TMR_ENABLE_STDIO
+ 
+Disabling this option will disable the support for the parameters defined 
+in stdio.h header file like FILE *. This is not required as stdio.h doese not
+exist in some of the embedded  architectures.
+ 
+ 
+   TMR_USE_STRERROR
+
+Disabling  this option will disable the support for the parameters defined 
+in string.h header file like sterror(). This is not required as string.h doese not
+exist in some of the embedded  architectures.
+
+==========================================================
+How to build and run the sample application on Embedded Pi:
+==========================================================
+
+	- Double click on stm32_bare_metal_api.uvprojx in stm32_proj\MercuryAPI folder,
+      it will launch the Keil IDE.
+	- Now click the Build option.
+	- After successful build dowmload code to the flash.
+	- If device is connected application will be installed
+      on the device.
+
+
+===================================================
+ThingMagic Reader and Embedded Pi setup connections:
+===================================================
+
+    - Connect your ThingMagic reader and Embedded Pi with uart pins as shown below.
+
+
+                         -------------------------             ------------------------
+                        |                         |           |                        |
+                        |                         |           |                        |
+                        |  -----------------    Rx|<--------->|Tx     ---------        |
+                        | |    TM-Reader    |   Tx|<--------->|Rx    | EMBEDDED|       |
+                        | | (M6e/Micro/Nano)|  Gnd|<--------->|Gnd   |    PI   |       |
+						|  -----------------      |           |       ---------        |
+						|                         |           |                        |
+						|  DevKit                 |           |                        |
+						 -------------------------             ------------------------  
+						 
+NOTE: Connect Tx-Rx pin of TM Reader with Rx-Tx pins of microcontroller.
+
+============================================
+Size distribution of code for bare metal api:
+============================================
+
+Program Size: This below shown code size distribution is of STM32 using bare metal api.
+============
+              Code=23316 
+			  RO-data=312 
+			  RW-data=100 
+			  ZI-data=17476			  
+Note:			  
+Code    : Shows how many bytes are occupied by code.
+RO Data : Shows how many bytes are occupied by Read-Only data.
+RW Data : Shows how many bytes are occupied by Read-Write data.
+ZI Data : Shows how many bytes are occupied by Zero Initialized data.

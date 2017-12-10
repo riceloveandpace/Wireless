@@ -1,0 +1,7 @@
+﻿  filter.c
+c:\users\yoseph\documents\senior 1\l&p\code\mercuryapi-1.29.4.34\c\src\arch\win32\include\pthread.h(307): error C2011: 'timespec': 'struct' type redefinition
+  c:\program files (x86)\windows kits\10\include\10.0.16299.0\ucrt\time.h(39): note: see declaration of 'timespec'
+c:\users\yoseph\documents\senior 1\l&p\code\mercuryapi-1.29.4.34\c\src\arch\win32\include\stdbool.h(13): error C2632: 'char' followed by 'bool' is illegal
+c:\users\yoseph\documents\senior 1\l&p\code\mercuryapi-1.29.4.34\c\src\arch\win32\include\stdbool.h(13): warning C4091: 'typedef ': ignored on left of 'char' when no variable is declared
+c:\users\yoseph\documents\senior 1\l&p\code\mercuryapi-1.29.4.34\c\src\samples\filter.c(118): warning C4477: 'sscanf' : format string '%u' requires an argument of type 'unsigned int *', but variadic argument 1 has type 'uint8_t *'
+  c:\users\yoseph\documents\senior 1\l&p\code\mercuryapi-1.29.4.34\c\src\samples\filter.c(118): note: consider using '%hhu' in the format string
