@@ -110,15 +110,30 @@ void parseAntennaList(uint8_t *antenna, uint8_t *antennaCount, char *args)
 }
 #endif
 
+
+void HardFault_Handler(void)
+{
+	
+ static volatile uint32_t _Continue = 0u;
+ //
+ // When stuck here, change the variable value to != 0 in order to step out
+ //
+ while (_Continue == 0u); 
+}
+
+
 int main(int argc, char *argv[])
 {
+	//MODIFIED
+	uint16_t tag_data_out[4];
+	
   TMR_Reader r, *rp;
   TMR_Status ret;
   TMR_ReadPlan plan;
   TMR_Region region;
   uint8_t *antennaList = NULL;
 #define READPOWER_NULL (-12345)
-  int readpower = READPOWER_NULL;
+  int readpower = 2000; //MODIFIED
   uint8_t buffer[20];
   uint8_t i;
   uint8_t antennaCount = 0x0;
@@ -179,7 +194,7 @@ int main(int argc, char *argv[])
   ret = TMR_create(rp, argv[1]);
 #else
   ret = TMR_create(rp, "tmr:///com1");
-  buffer[0] = 1;
+  buffer[0] = 2;
   antennaList = buffer;
   antennaCount = 0x01;
 #endif
@@ -297,14 +312,50 @@ int main(int argc, char *argv[])
 #ifndef BARE_METAL
   checkerr(rp, ret, 1, "initializing the  read plan");
 #endif
-  
+	
   /* Commit read plan */
   ret = TMR_paramSet(rp, TMR_PARAM_READ_PLAN, &plan);
 #ifndef BARE_METAL
   checkerr(rp, ret, 1, "setting read plan");
 #endif
-  ret = TMR_read(rp, 500, NULL);
-  
+	// MODIFIED
+	int value = 2;
+	ret = TMR_paramSet(rp, TMR_PARAM_TAGOP_ANTENNA, &value);
+	
+	//Set all gpio to master spi out
+  TMR_TagOp tagop;
+	TMR_uint16List data_list;
+	data_list.list = (uint16_t[4]){0x0000,0x0000,0x0000,0x0000};
+	data_list.max = 4;
+	data_list.len = 4;
+  TMR_TagOp_init_GEN2_WriteData(&tagop, TMR_GEN2_BANK_USER,0x06,&data_list);
+	TMR_uint8List test;
+	test.max = 0;
+	test.list = NULL;
+	TMR_executeTagOp(rp, &tagop, NULL, &test);
+	
+	TMR_TagOp tagop2;             //PSM_CTL TRIM_VLON TRIM_VLOFF TRIM_VREGL
+	TMR_uint16List data_list2;    //        2.9V      1.9V       2V
+	data_list2.list = (uint16_t[4]){0x0015, 0x0CA,   0x0274,    0x0249};
+	data_list2.max = 4;
+	data_list2.len = 4;
+  TMR_TagOp_init_GEN2_WriteData(&tagop2, TMR_GEN2_BANK_USER,0x02,&data_list2);
+	TMR_executeTagOp(rp, &tagop2, NULL, &test);
+	
+	TMR_TagOp tagop3;
+  TMR_uint8List dataList;
+	dataList.len = 2;
+	dataList.max = 2;
+	uint8_t data[2];
+	dataList.list = data;
+  TMR_TagOp_init_GEN2_ReadData(&tagop3, (TMR_GEN2_BANK_USER), 0x101, 1); //last one is readLength
+	//ret = TMR_read(rp, 5000, NULL);	
+	
+	TMR_executeTagOp(rp, &tagop3, NULL, &dataList);
+	
+	// (reader, timeoutMs, tagCount)
+	ret = TMR_read(rp, 5000, NULL);	
+
 #ifndef BARE_METAL
 if (TMR_ERROR_TAG_ID_BUFFER_FULL == ret)
   {
@@ -328,8 +379,8 @@ if (TMR_ERROR_TAG_ID_BUFFER_FULL == ret)
 #ifndef BARE_METAL  
   checkerr(rp, ret, 1, "fetching tag");
 #endif
-    TMR_bytesToHex(trd.tag.epc, trd.tag.epcByteCount, epcStr);
-
+    TMR_bytesToHex(trd.tag.epc, trd.tag.epcByteCount, epcStr);  
+		
 #ifndef BARE_METAL
 #ifdef WIN32
 		if (rp->readerType == TMR_READER_TYPE_SERIAL)
@@ -518,6 +569,7 @@ if (TMR_ERROR_TAG_ID_BUFFER_FULL == ret)
 	printf ("\n");
 #endif
   }
+	//TMR_read(rp, 5000, NULL);	
 
   TMR_destroy(rp);
   return 0;

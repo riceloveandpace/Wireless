@@ -4,7 +4,7 @@
  *      *** Do not modify ! ***
  *
  * Project: 'stm32_bare_metal_api' 
- * Target:  'stm32_bare_metal_api' 
+ * Target:  'tm4c123_bare_metal_api' 
  */
 
 #ifndef RTE_COMPONENTS_H
@@ -14,7 +14,7 @@
 /*
  * Define the Device Header File: 
  */
-#define CMSIS_device_header "stm32f10x.h"
+#define CMSIS_device_header "TM4C123.h"
 
 
 #endif /* RTE_COMPONENTS_H */

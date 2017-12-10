@@ -1,0 +1,6 @@
+--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api
+-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE
+-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include
+-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123
+-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1
+-o .\objects\serial_reader_l3.o --omf_browse .\objects\serial_reader_l3.crf --depend .\objects\serial_reader_l3.d --feedback ".\Objects\stm32_bare_metal_api.fed" "..\..\src\api\serial_reader_l3.c"
