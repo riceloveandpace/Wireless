@@ -334,6 +334,8 @@ int main(int argc, char *argv[])
 	test.list = NULL;
 	TMR_executeTagOp(rp, &tagop, NULL, &test);
 	
+  // setting up configuration for the ROCKY100
+  // technically doesn't have to be sent every time
 	TMR_TagOp tagop2;             //PSM_CTL TRIM_VLON TRIM_VLOFF TRIM_VREGL
 	TMR_uint16List data_list2;    //        2.9V      1.9V       2V
 	data_list2.list = (uint16_t[4]){0x0015, 0x0CA,   0x0274,    0x0249};
@@ -342,6 +344,7 @@ int main(int argc, char *argv[])
   TMR_TagOp_init_GEN2_WriteData(&tagop2, TMR_GEN2_BANK_USER,0x02,&data_list2);
 	TMR_executeTagOp(rp, &tagop2, NULL, &test);
 	
+  // 
 	TMR_TagOp tagop3;
   TMR_uint8List dataList;
 	dataList.len = 2;
