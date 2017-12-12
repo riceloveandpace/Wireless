@@ -27,3 +27,12 @@
 .\objects\read.o: D:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\stdarg.h
 .\objects\read.o: D:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 .\objects\read.o: D:\Software\Keil_v5\ARM\ARMCC\Bin\..\include\inttypes.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\inc/hw_ints.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\inc/hw_memmap.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\driverlib/gpio.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\driverlib/interrupt.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\driverlib/pin_map.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\driverlib/sysctl.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\driverlib/timer.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\driverlib/uart.h
+.\objects\read.o: ..\..\src\arch\ARM\tivaware\utils/uartstdio.h

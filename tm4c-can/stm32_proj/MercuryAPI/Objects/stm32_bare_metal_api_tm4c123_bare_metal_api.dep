@@ -1,5 +1,5 @@
 Dependencies for Project 'stm32_bare_metal_api', Target 'tm4c123_bare_metal_api': (DO NOT MODIFY !)
-F (..\..\src\api\hex_bytes.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\hex_bytes.o --omf_browse .\objects\hex_bytes.crf --depend .\objects\hex_bytes.d)
+F (..\..\src\api\hex_bytes.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\hex_bytes.o --omf_browse .\objects\hex_bytes.crf --depend .\objects\hex_bytes.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x574ED8D6)
 I (..\..\src\api\tm_reader.h)(0x5A2062C3)
 I (..\..\src\api\tm_config.h)(0x5A2062C3)
@@ -24,7 +24,7 @@ I (..\..\src\api\tmr_serial_reader.h)(0x5A2062C3)
 I (..\..\src\api\tmr_region.h)(0x5A2062C2)
 I (..\..\src\api\tmr_serial_transport.h)(0x5A2062C2)
 I (..\..\src\api\serial_reader_imp.h)(0x5A2062C2)
-F (..\..\src\api\serial_reader.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\serial_reader.o --omf_browse .\objects\serial_reader.crf --depend .\objects\serial_reader.d)
+F (..\..\src\api\serial_reader.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\serial_reader.o --omf_browse .\objects\serial_reader.crf --depend .\objects\serial_reader.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdio.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\string.h)(0x574ED8D6)
@@ -53,7 +53,7 @@ I (..\..\src\api\tmr_serial_transport.h)(0x5A2062C2)
 I (..\..\src\api\serial_reader_imp.h)(0x5A2062C2)
 I (..\..\src\api\tmr_utils.h)(0x5A2062C3)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stddef.h)(0x574ED8D6)
-F (..\..\src\api\serial_reader_l3.c)(0x5A20CA94)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\serial_reader_l3.o --omf_browse .\objects\serial_reader_l3.crf --depend .\objects\serial_reader_l3.d)
+F (..\..\src\api\serial_reader_l3.c)(0x5A20CA94)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\serial_reader_l3.o --omf_browse .\objects\serial_reader_l3.crf --depend .\objects\serial_reader_l3.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\inttypes.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdint.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdio.h)(0x574ED8D6)
@@ -83,7 +83,7 @@ I (..\..\src\api\tmr_serial_transport.h)(0x5A2062C2)
 I (..\..\src\api\serial_reader_imp.h)(0x5A2062C2)
 I (..\..\src\api\tmr_utils.h)(0x5A2062C3)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stddef.h)(0x574ED8D6)
-F (..\..\src\api\tm_reader.c)(0x5A209984)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tm_reader.o --omf_browse .\objects\tm_reader.crf --depend .\objects\tm_reader.d)
+F (..\..\src\api\tm_reader.c)(0x5A209984)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tm_reader.o --omf_browse .\objects\tm_reader.crf --depend .\objects\tm_reader.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stddef.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdio.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x574ED8D6)
@@ -112,7 +112,7 @@ I (..\..\src\api\tmr_region.h)(0x5A2062C2)
 I (..\..\src\api\tmr_serial_transport.h)(0x5A2062C2)
 I (..\..\src\api\serial_reader_imp.h)(0x5A2062C2)
 I (..\..\src\api\tmr_utils.h)(0x5A2062C3)
-F (..\..\src\api\tmr_param.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tmr_param.o --omf_browse .\objects\tmr_param.crf --depend .\objects\tmr_param.d)
+F (..\..\src\api\tmr_param.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tmr_param.o --omf_browse .\objects\tmr_param.crf --depend .\objects\tmr_param.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\string.h)(0x574ED8D6)
 I (..\..\src\api\tm_reader.h)(0x5A2062C3)
 I (..\..\src\api\tm_config.h)(0x5A2062C3)
@@ -138,7 +138,7 @@ I (..\..\src\api\tmr_region.h)(0x5A2062C2)
 I (..\..\src\api\tmr_serial_transport.h)(0x5A2062C2)
 I (..\..\src\api\tmr_utils.h)(0x5A2062C3)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stddef.h)(0x574ED8D6)
-F (..\..\src\api\tmr_strerror.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tmr_strerror.o --omf_browse .\objects\tmr_strerror.crf --depend .\objects\tmr_strerror.d)
+F (..\..\src\api\tmr_strerror.c)(0x5A2062C3)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tmr_strerror.o --omf_browse .\objects\tmr_strerror.crf --depend .\objects\tmr_strerror.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdio.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\string.h)(0x574ED8D6)
 I (..\..\src\api\tm_reader.h)(0x5A2062C3)
@@ -163,14 +163,14 @@ I (..\..\src\api\tmr_tag_lock_action.h)(0x5A2062C3)
 I (..\..\src\api\tmr_serial_reader.h)(0x5A2062C3)
 I (..\..\src\api\tmr_region.h)(0x5A2062C2)
 I (..\..\src\api\tmr_serial_transport.h)(0x5A2062C2)
-F (..\..\src\api\tmr_utils.c)(0x5A2062C2)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tmr_utils.o --omf_browse .\objects\tmr_utils.crf --depend .\objects\tmr_utils.d)
+F (..\..\src\api\tmr_utils.c)(0x5A2062C2)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\tmr_utils.o --omf_browse .\objects\tmr_utils.crf --depend .\objects\tmr_utils.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stddef.h)(0x574ED8D6)
 I (..\..\src\api\osdep.h)(0x5A2062C2)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdint.h)(0x574ED8D6)
 I (..\..\src\api\tmr_types.h)(0x5A2062C3)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x574ED8D6)
 I (..\..\src\api\tmr_utils.h)(0x5A2062C3)
-F (..\..\src\samples\read.c)(0x5A2B085F)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\read.o --omf_browse .\objects\read.crf --depend .\objects\read.d)
+F (..\..\src\samples\read.c)(0x5A2EA3CE)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\read.o --omf_browse .\objects\read.crf --depend .\objects\read.d)
 I (..\..\src\api\tm_reader.h)(0x5A2062C3)
 I (..\..\src\api\tm_config.h)(0x5A2062C3)
 I (..\..\src\api\tmr_types.h)(0x5A2062C3)
@@ -199,7 +199,16 @@ I (D:\Software\Keil_v5\ARM\ARMCC\include\stdlib.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdarg.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\string.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\inttypes.h)(0x574ED8D6)
-F (..\..\src\api\osdep_tm4c123gh5pm.c)(0x5A209E9A)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\osdep_tm4c123gh5pm.o --omf_browse .\objects\osdep_tm4c123gh5pm.crf --depend .\objects\osdep_tm4c123gh5pm.d)
+I (..\..\src\arch\ARM\tivaware\inc/hw_ints.h)(0x5A208D23)
+I (..\..\src\arch\ARM\tivaware\inc/hw_memmap.h)(0x5A208D23)
+I (..\..\src\arch\ARM\tivaware\driverlib/gpio.h)(0x5A208D1B)
+I (..\..\src\arch\ARM\tivaware\driverlib/interrupt.h)(0x5A208D1B)
+I (..\..\src\arch\ARM\tivaware\driverlib/pin_map.h)(0x5A208D1B)
+I (..\..\src\arch\ARM\tivaware\driverlib/sysctl.h)(0x5A208D1B)
+I (..\..\src\arch\ARM\tivaware\driverlib/timer.h)(0x5A208D1B)
+I (..\..\src\arch\ARM\tivaware\driverlib/uart.h)(0x5A208D1B)
+I (..\..\src\arch\ARM\tivaware\utils/uartstdio.h)(0x5A208D2F)
+F (..\..\src\api\osdep_tm4c123gh5pm.c)(0x5A209E9A)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\osdep_tm4c123gh5pm.o --omf_browse .\objects\osdep_tm4c123gh5pm.crf --depend .\objects\osdep_tm4c123gh5pm.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdint.h)(0x574ED8D6)
 I (..\..\src\api\osdep.h)(0x5A2062C2)
 I (D:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123\TM4C123GH6PM.h)(0x551052AC)
@@ -207,7 +216,7 @@ I (D:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include\core_cm4.h)
 I (D:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include\cmsis_compiler.h)(0x57D8578A)
 I (D:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include\cmsis_armcc.h)(0x57EBA91C)
 I (D:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123\system_TM4C123.h)(0x51B75486)
-F (..\..\src\api\serial_transport_tm4c123gh6pm.c)(0x5A20C642)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\serial_transport_tm4c123gh6pm.o --omf_browse .\objects\serial_transport_tm4c123gh6pm.crf --depend .\objects\serial_transport_tm4c123gh6pm.d)
+F (..\..\src\api\serial_transport_tm4c123gh6pm.c)(0x5A2E92C2)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\serial_transport_tm4c123gh6pm.o --omf_browse .\objects\serial_transport_tm4c123gh6pm.crf --depend .\objects\serial_transport_tm4c123gh6pm.d)
 I (..\..\src\api\tm_reader.h)(0x5A2062C3)
 I (..\..\src\api\tm_config.h)(0x5A2062C3)
 I (..\..\src\api\tmr_types.h)(0x5A2062C3)
@@ -235,8 +244,9 @@ I (D:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include\core_cm4.h)
 I (D:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include\cmsis_compiler.h)(0x57D8578A)
 I (D:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include\cmsis_armcc.h)(0x57EBA91C)
 I (D:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123\system_TM4C123.h)(0x51B75486)
-F (RTE\Device\TM4C123GH6PM\startup_TM4C123.s)(0x5A20B165)(--cpu Cortex-M4.fp --pd "__EVAL SETA 1" -g --apcs=interwork --pd "__MICROLIB SETA 1"-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123--pd "__UVISION_VERSION SETA 521" --pd "_RTE_ SETA 1" --pd "TM4C123GH6PM SETA 1"--list .\listings\startup_tm4c123.lst --xref -o .\objects\startup_tm4c123.o --depend .\objects\startup_tm4c123.d)
-F (RTE\Device\TM4C123GH6PM\system_TM4C123.c)(0x550AD65A)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api-IC:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\system_tm4c123.o --omf_browse .\objects\system_tm4c123.crf --depend .\objects\system_tm4c123.d)
+F (..\..\src\arch\ARM\tivaware\driverlib\rvmdk\driverlib.lib)(0x5A208D1B)()
+F (RTE\Device\TM4C123GH6PM\startup_TM4C123.s)(0x5A2E9F64)(--cpu Cortex-M4.fp --pd "__EVAL SETA 1" -g --apcs=interwork --pd "__MICROLIB SETA 1"-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123--pd "__UVISION_VERSION SETA 521" --pd "_RTE_ SETA 1" --pd "TM4C123GH6PM SETA 1"--list .\listings\startup_tm4c123.lst --xref -o .\objects\startup_tm4c123.o --depend .\objects\startup_tm4c123.d)
+F (RTE\Device\TM4C123GH6PM\system_TM4C123.c)(0x550AD65A)(--c99 -c --cpu Cortex-M4.fp -D__EVAL -D__MICROLIB -g -O3 --apcs=interwork --split_sections -I ..\..\src\api -I ..\..\src\arch\ARM\tivaware\-IC:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE-ID:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include-ID:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123-D__UVISION_VERSION="521" -D_RTE_ -DTM4C123GH6PM -DBARE_METAL -Drvmdk -DPART_TM4C123GH6PM -DTARGET_IS_TM4C123_RB1-o .\objects\system_tm4c123.o --omf_browse .\objects\system_tm4c123.crf --depend .\objects\system_tm4c123.d)
 I (D:\Software\Keil_v5\ARM\ARMCC\include\stdint.h)(0x574ED8D6)
 I (D:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123\TM4C123.h)(0x530F6376)
 I (D:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123\TM4C123GH6PM.h)(0x551052AC)

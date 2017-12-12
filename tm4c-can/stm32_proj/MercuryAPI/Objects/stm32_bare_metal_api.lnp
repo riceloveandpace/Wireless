@@ -9,6 +9,7 @@
 ".\objects\read.o"
 ".\objects\osdep_tm4c123gh5pm.o"
 ".\objects\serial_transport_tm4c123gh6pm.o"
+"..\..\src\arch\ARM\tivaware\driverlib\rvmdk\driverlib.lib"
 ".\objects\startup_tm4c123.o"
 ".\objects\system_tm4c123.o"
 --library_type=microlib

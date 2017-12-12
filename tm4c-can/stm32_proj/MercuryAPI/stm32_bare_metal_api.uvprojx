@@ -335,7 +335,7 @@
               <MiscControls></MiscControls>
               <Define>BARE_METAL rvmdk PART_TM4C123GH6PM TARGET_IS_TM4C123_RB1</Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\src\api</IncludePath>
+              <IncludePath>..\..\src\api;..\..\src\arch\ARM\tivaware\</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -428,6 +428,16 @@
               <FileName>serial_transport_tm4c123gh6pm.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\src\api\serial_transport_tm4c123gh6pm.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Libraries</GroupName>
+          <Files>
+            <File>
+              <FileName>driverlib.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\..\src\arch\ARM\tivaware\driverlib\rvmdk\driverlib.lib</FilePath>
             </File>
           </Files>
         </Group>

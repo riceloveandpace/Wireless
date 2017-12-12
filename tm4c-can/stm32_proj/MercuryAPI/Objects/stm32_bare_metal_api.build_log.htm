@@ -21,7 +21,7 @@ Target DLL:      lmidk-agdi.dll V???
 Dialog DLL:      TCM.DLL V1.14.14.0
  
 <h2>Project:</h2>
-C:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\stm32_bare_metal_api.uvprojx
+C:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\stm32_bare_metal_api.uvprojx
 Project File Date:  11/30/2017
 
 <h2>Output:</h2>
@@ -48,15 +48,21 @@ compiling tmr_param.c...
 compiling tmr_strerror.c...
 compiling tmr_utils.c...
 compiling read.c...
-..\..\src\samples\read.c(376): warning:  #177-D: variable "timeStr" was declared but never referenced
+..\..\src\samples\read.c(597): warning:  #111-D: statement is unreachable
+                GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, GPIO_PIN_3);
+..\..\src\samples\read.c(629): warning:  #177-D: variable "timeStr" was declared but never referenced
       char timeStr[128];
-..\..\src\samples\read.c(128): warning:  #177-D: variable "tag_data_out" was declared but never referenced
+..\..\src\samples\read.c(184): warning:  #177-D: variable "ui32PrevCount" was declared but never referenced
+      uint32_t ui32PrevCount = 0;
+..\..\src\samples\read.c(250): warning:  #177-D: variable "tag_data_out" was declared but never referenced
         uint16_t tag_data_out[4];
-..\..\src\samples\read.c(131): warning:  #550-D: variable "ret" was set but never used
-    TMR_Status ret;
-..\..\src\samples\read.c(138): warning:  #177-D: variable "i" was declared but never referenced
+..\..\src\samples\read.c(260): warning:  #177-D: variable "i" was declared but never referenced
     uint8_t i;
-..\..\src\samples\read.c: 4 warnings, 0 errors
+..\..\src\samples\read.c(528): warning:  #550-D: variable "test" was set but never used
+        TMR_uint8List test;
+..\..\src\samples\read.c(571): warning:  #177-D: variable "last_sample_time" was declared but never referenced
+        uint32_t last_sample_time = 0;
+..\..\src\samples\read.c: 7 warnings, 0 errors
 compiling osdep_tm4c123gh5pm.c...
 compiling serial_transport_tm4c123gh6pm.c...
 ..\..\src\api\serial_transport_tm4c123gh6pm.c(84): warning:  #177-D: variable "p" was declared but never referenced
@@ -67,8 +73,8 @@ compiling serial_transport_tm4c123gh6pm.c...
 assembling startup_TM4C123.s...
 compiling system_TM4C123.c...
 linking...
-Program Size: Code=28632 RO-data=704 RW-data=88 ZI-data=17472  
-".\Objects\stm32_bare_metal_api.axf" - 0 Error(s), 10 Warning(s).
+Program Size: Code=30196 RO-data=1568 RW-data=144 ZI-data=17552  
+".\Objects\stm32_bare_metal_api.axf" - 0 Error(s), 13 Warning(s).
 
 *** Performing Cross-Module-Optimization:
 compiling hex_bytes.c...
@@ -96,7 +102,7 @@ compiling serial_transport_tm4c123gh6pm.c...
 ..\..\src\api\serial_transport_tm4c123gh6pm.c: 2 warnings, 0 errors
 compiling system_TM4C123.c...
 linking...
-Program Size: Code=28632 RO-data=704 RW-data=88 ZI-data=17472  
+Program Size: Code=30196 RO-data=1568 RW-data=144 ZI-data=17552  
 After Build - User command #1: fromelf --bin --output .\Objects\stm32_bare_metal_api.bin .\Objects\stm32_bare_metal_api.axf
 ".\Objects\stm32_bare_metal_api.axf" - 0 Error(s), 6 Warning(s).
 *** Completed Cross-Module-Optimization after 2 iteration(s).
@@ -116,7 +122,7 @@ Package Vendor: Keil
    * Component: Startup Version: 1.0.1
 
 <h2>Collection of Component include folders:</h2>
-  C:\Users\cody\Downloads\mercuryapi-1.29.4.34\mercuryapi-1.29.4.34\c\stm32_proj\MercuryAPI\RTE
+  C:\Users\cody\Documents\lap-repo\Wireless\tm4c-can\stm32_proj\MercuryAPI\RTE
   D:\Software\Keil_v5\ARM\PACK\ARM\CMSIS\5.0.0-Beta12\CMSIS\Include
   D:\Software\Keil_v5\ARM\PACK\Keil\TM4C_DFP\1.1.0\Device\Include\TM4C123
 
@@ -128,7 +134,7 @@ Package Vendor: Keil
       Include file:  Device\Include\TM4C123\TM4C123.h
       Source file:   Device\Source\ARM\startup_TM4C123.s
       Source file:   Device\Source\system_TM4C123.c
-Build Time Elapsed:  00:00:19
+Build Time Elapsed:  00:00:16
 </pre>
 </body>
 </html>

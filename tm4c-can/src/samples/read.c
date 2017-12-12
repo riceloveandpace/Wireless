@@ -11,6 +11,22 @@
 #include <stdarg.h>
 #include <string.h>
 #include <inttypes.h>
+#include <stdbool.h>
+#include <stdint.h>
+//#include "TM4C123.h"
+#include "inc/hw_ints.h"
+#include "inc/hw_memmap.h"
+#include "driverlib/gpio.h"
+#include "driverlib/interrupt.h"
+#include "driverlib/pin_map.h"
+#include "driverlib/sysctl.h"
+#include "driverlib/timer.h"
+#include "driverlib/uart.h"
+#include "utils/uartstdio.h"
+
+int a_einds[68] = {702,1475,2484,3385,4344,5239,6173,7078,7690,8641,9548,10463,11377,12255,13111,13979,14832,15504,16335,17183,18046,18913,19760,20648,21536,22438,23301,24176,24868,25782,26700,27586,28503,29416,30334,31245,32151,33067,33986,34904,35792,36670,37395,38035,38668,39297,40072,41083,42034,43036,43996,44890,45864,46759,47646,48522,49290,50176,51061,51964,52867,53776,54669,55572,56480,57396,58309,59225};
+int v_sinds[68] = {757,1598,2586,3493,4450,5347,6277,7187,7796,8768,9658,10575,11491,12365,13222,14082,14949,15643,16455,17300,18163,19024,19874,20764,21655,22548,23419,24299,25018,25906,26813,27699,28617,29536,30453,31366,32265,33186,34105,35017,35906,36791,37519,38090,38804,39369,40199,41194,42143,43138,44101,44997,45966,46867,47787,48666,49434,50320,51212,52109,53013,53924,54817,55718,56625,57541,58462,59368};
+int v_einds[68] = {899,1680,2667,3574,4530,5428,6357,7278,7937,8848,9740,10655,11575,12451,13302,14163,15033,15717,16535,17387,18245,19108,19955,20849,21739,22630,23506,24381,25100,25994,26899,27785,28698,29617,30535,31452,32350,33269,34187,35101,35999,36873,37610,38228,38890,39487,40282,41276,42225,43222,44188,45079,46051,46958,47872,48748,49516,50406,51298,52191,53094,54011,54903,55799,56707,57623,58543,59450};
 
 #ifndef BARE_METAL
 #if WIN32
@@ -121,9 +137,113 @@ void HardFault_Handler(void)
  while (_Continue == 0u); 
 }
 
+static volatile uint32_t g_ui32Counter = 0;
+
+//*****************************************************************************
+//
+// The interrupt handler for the Timer0B interrupt.
+//
+//*****************************************************************************
+void TIMER0B_Handler(void)
+{
+    //
+    // Clear the timer interrupt flag.
+    //
+    TimerIntClear(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+
+    //
+    // Update the periodic interrupt counter.
+    //
+    g_ui32Counter++;
+}
+
+size_t vsb_index, veb_index, aeb_index;
+void GPIOA_Handler(void) {
+	  g_ui32Counter = 0;
+	vsb_index = 0;
+	veb_index = 0;
+	aeb_index = 0;
+	GPIOIntClear(GPIO_PORTA_BASE, GPIO_INT_PIN_4);
+	//GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, (GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_3)) ? 0 : GPIO_PIN_3);
+}
+
+int x;
 
 int main(int argc, char *argv[])
 {
+	
+	
+#if defined(TARGET_IS_TM4C129_RA0) ||                                         \
+    defined(TARGET_IS_TM4C129_RA1) ||                                         \
+    defined(TARGET_IS_TM4C129_RA2)
+    uint32_t ui32SysClock;
+#endif
+
+    uint32_t ui32PrevCount = 0;
+
+		// Pin A4 setup
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);        // Enable port A
+    GPIOPinTypeGPIOInput(GPIO_PORTA_BASE, GPIO_PIN_4);  // Init PA4 as input
+    GPIOPadConfigSet(GPIO_PORTA_BASE, GPIO_PIN_4,
+        GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);  // Enable weak pullup resistor for PA4
+    GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_3);  // Init PA3 as output
+				
+		// Interrupt setup
+    GPIOIntDisable(GPIO_PORTA_BASE, GPIO_PIN_4);        // Disable interrupt for PF4 (in case it was enabled)
+    GPIOIntClear(GPIO_PORTA_BASE, GPIO_PIN_4);      // Clear pending interrupts for PF4
+    //GPIOIntRegister(GPIO_PORTA_BASE, onButtonDown);     // Register our handler function for port F
+		IntEnable(INT_GPIOA);
+    GPIOIntTypeSet(GPIO_PORTA_BASE, GPIO_PIN_4,
+        GPIO_RISING_EDGE);             // Configure PF4 for falling edge trigger
+    GPIOIntEnable(GPIO_PORTA_BASE, GPIO_PIN_4);     // Enable interrupt for PF4
+
+    //
+    // The Timer0 peripheral must be enabled for use.
+    //
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TIMER0);
+		
+
+    //
+    // Configure Timer0B as a 16-bit periodic timer.
+    //
+    TimerConfigure(TIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_B_PERIODIC);
+
+    //
+    // Set the Timer0B load value to 1ms.
+    //
+#if defined(TARGET_IS_TM4C129_RA0) ||                                         \
+    defined(TARGET_IS_TM4C129_RA1) ||                                         \
+    defined(TARGET_IS_TM4C129_RA2)
+    TimerLoadSet(TIMER0_BASE, TIMER_B, ui32SysClock / 1000);
+#else
+    TimerLoadSet(TIMER0_BASE, TIMER_B, SysCtlClockGet() / 1000);
+#endif
+
+    //
+    // Enable processor interrupts.
+    //
+    IntMasterEnable();
+
+    //
+    // Configure the Timer0B interrupt for timer timeout.
+    //
+    TimerIntEnable(TIMER0_BASE, TIMER_TIMB_TIMEOUT);
+
+    //
+    // Enable the Timer0B interrupt on the processor (NVIC).
+    //
+    IntEnable(INT_TIMER0B);
+
+    //
+    // Initialize the interrupt counter.
+    //
+    g_ui32Counter = 0;
+
+    //
+    // Enable Timer0B.
+    //
+    TimerEnable(TIMER0_BASE, TIMER_B);
+	
 	//MODIFIED
 	uint16_t tag_data_out[4];
 	
@@ -264,6 +384,8 @@ int main(int argc, char *argv[])
 #endif
     value = readpower;
     ret = TMR_paramSet(rp, TMR_PARAM_RADIO_READPOWER, &value);
+		//MODIFIED: Also set writepower
+		ret = TMR_paramSet(rp, TMR_PARAM_RADIO_WRITEPOWER, &value);
 #ifndef BARE_METAL
 	checkerr(rp, ret, 1, "setting read power");
 #endif
@@ -322,6 +444,78 @@ int main(int argc, char *argv[])
 	int value = 2;
 	ret = TMR_paramSet(rp, TMR_PARAM_TAGOP_ANTENNA, &value);
 	
+	value = 100;
+	ret = TMR_paramSet(rp, TMR_PARAM_COMMANDTIMEOUT, &value);
+	
+	
+  /* Read Plan */
+  /*
+	{
+    TMR_ReadPlan plan;
+    TMR_RP_init_simple(&plan, antennaCount, antennaList, TMR_TAG_PROTOCOL_GEN2, 1000);
+
+    // (Optional) Tag Filter
+    // Not required to read TID, but useful for limiting target tags 
+    if (0)  // Change to "if (1)" to enable filter
+    {
+      TMR_TagData td;
+      static TMR_TagFilter filt;
+      td.protocol = TMR_TAG_PROTOCOL_GEN2;
+      {
+        int i = 0;
+        td.epc[i++] = 0x01;
+        td.epc[i++] = 0x23;
+        td.epcByteCount = i;
+      }
+      ret = TMR_TF_init_tag(&filt, &td);
+      ret = TMR_RP_set_filter(&plan, &filt);
+    }
+
+    // Embedded Tagop
+    {
+      static TMR_TagOp op;
+
+      ret = TMR_TagOp_init_GEN2_ReadData(&op, TMR_GEN2_BANK_USER, 0x101, 3);
+      ret = TMR_RP_set_tagop(&plan, &op);
+    }
+
+    // Commit read plan
+    ret = TMR_paramSet(rp, TMR_PARAM_READ_PLAN, &plan);
+  }
+
+  ret = TMR_read(rp, 1500, NULL);
+
+  while (TMR_SUCCESS == TMR_hasMoreTags(rp))
+  {
+    TMR_TagReadData trd;
+    uint8_t dataBuf[255];
+    char epcStr[128];
+
+    ret = TMR_TRD_init_data(&trd, sizeof(dataBuf)/sizeof(uint8_t), dataBuf);
+    ret = TMR_getNextTag(rp, &trd);
+    TMR_bytesToHex(trd.tag.epc, trd.tag.epcByteCount, epcStr);
+    if (0 < trd.data.len)
+    {
+      char dataStr[255];
+      TMR_bytesToHex(trd.data.list, trd.data.len, dataStr);
+    }
+  }*/
+	
+	
+	// use a scan to charge up the on chip capacitor
+	ret = TMR_read(rp, 3000, NULL);	
+	
+	
+	TMR_TagReadData trd1;
+	TMR_TagFilter filt;
+	if (TMR_SUCCESS == TMR_hasMoreTags(rp)) {
+    ret = TMR_getNextTag(rp, &trd1);
+		TMR_TF_init_tag(&filt,&trd1.tag);
+	} else {
+		__asm__("BKPT 0");
+	}
+
+	
 	//Set all gpio to master spi out
   TMR_TagOp tagop;
 	TMR_uint16List data_list;
@@ -332,29 +526,86 @@ int main(int argc, char *argv[])
 	TMR_uint8List test;
 	test.max = 0;
 	test.list = NULL;
-	TMR_executeTagOp(rp, &tagop, NULL, &test);
+	//ret = TMR_executeTagOp(rp, &tagop, &filt, &test);
+
+	if (ret != TMR_SUCCESS) {
+		x = TMR_ERROR_CODE(ret);
+		__asm__("BKPT 0");
+	}
 	
+  // setting up configuration for the ROCKY100
+  // technically doesn't have to be sent every time
 	TMR_TagOp tagop2;             //PSM_CTL TRIM_VLON TRIM_VLOFF TRIM_VREGL
-	TMR_uint16List data_list2;    //        2.9V      1.9V       2V
-	data_list2.list = (uint16_t[4]){0x0015, 0x0CA,   0x0274,    0x0249};
+	TMR_uint16List data_list2;    // 0x013       3.1V      2.9V       2V
+	data_list2.list = (uint16_t[4]){0x013, 0x074,   0x0CA,    0x09F};
 	data_list2.max = 4;
 	data_list2.len = 4;
   TMR_TagOp_init_GEN2_WriteData(&tagop2, TMR_GEN2_BANK_USER,0x02,&data_list2);
-	TMR_executeTagOp(rp, &tagop2, NULL, &test);
+	//ret = TMR_executeTagOp(rp, &tagop2, &filt, &test);
+
+	if (ret != TMR_SUCCESS) {
+		x = TMR_ERROR_CODE(ret);
+		__asm__("BKPT 0");
+	}
 	
+  // 
 	TMR_TagOp tagop3;
   TMR_uint8List dataList;
-	dataList.len = 2;
-	dataList.max = 2;
-	uint8_t data[2];
+	dataList.len = 6;
+	dataList.max = 6;
+	uint8_t data[6];
 	dataList.list = data;
-  TMR_TagOp_init_GEN2_ReadData(&tagop3, (TMR_GEN2_BANK_USER), 0x101, 1); //last one is readLength
-	//ret = TMR_read(rp, 5000, NULL);	
 	
-	TMR_executeTagOp(rp, &tagop3, NULL, &dataList);
+	TMR_TagData temp_td;
+	static TMR_TagFilter bogus_filt;
+	temp_td.protocol = TMR_TAG_PROTOCOL_GEN2;
+	{
+		int i = 0;
+		temp_td.epc[i++] = 0x01;
+		temp_td.epc[i++] = 0x23;
+		temp_td.epcByteCount = i;
+	}
+	ret = TMR_TF_init_tag(&bogus_filt, &temp_td);
+	uint32_t last_sample_time = 0;
+	
+	int vs_bound = v_sinds[vsb_index++];
+	int ve_bound = v_einds[veb_index++];
+	int ae_bound = a_einds[aeb_index++];
+	while (1) {
+		if (g_ui32Counter > vs_bound) {
+			vs_bound = v_sinds[vsb_index++];
+			TMR_TagOp_init_GEN2_ReadData(&tagop3, TMR_GEN2_BANK_USER, 0x03, 3); //last one is readLength
+	  } else if (g_ui32Counter > ve_bound) {
+			ve_bound = v_einds[veb_index++];
+			TMR_TagOp_init_GEN2_ReadData(&tagop3, TMR_GEN2_BANK_USER, 0x04, 3); //last one is readLength
+		} else if (g_ui32Counter > ae_bound) {
+			ae_bound = a_einds[aeb_index++];
+			TMR_TagOp_init_GEN2_ReadData(&tagop3, TMR_GEN2_BANK_USER, 0x05, 3); //last one is readLength
+		} else {
+			TMR_TagOp_init_GEN2_ReadData(&tagop3, TMR_GEN2_BANK_USER, 0x07, 3); //last one is readLength
+		}
+		TMR_executeTagOp(rp, &tagop3, &filt, &dataList);
+		GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, GPIOPinRead(GPIO_PORTA_BASE, GPIO_PIN_3)? 0 : GPIO_PIN_3);
+	}
+	
+	
+ 
+	//TMR_read(rp, 500, NULL);
+	//while(1) {
+		GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, GPIO_PIN_3);
+		ret = TMR_executeTagOp(rp, &tagop3, &filt, &dataList);
+		GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, 0);
+	//}
+
+	if (ret != TMR_SUCCESS) {
+		x = TMR_ERROR_CODE(ret);
+		__asm__("BKPT 0");
+	}
+	//ret = TMR_read(rp, 500, NULL);	
+	
 	
 	// (reader, timeoutMs, tagCount)
-	ret = TMR_read(rp, 5000, NULL);	
+	//ret = TMR_read(rp, 500, NULL);	
 
 #ifndef BARE_METAL
 if (TMR_ERROR_TAG_ID_BUFFER_FULL == ret)
