@@ -1,3 +1,6 @@
+#include <msp430.h>
+#include "ds.h"
+#include <stdint.h>
 
 //******************************************************************************
 //  MSP430G2x32/G2x52 Demo - ADC10, Sample A1, AVcc Ref, Set P1.0 if > 0.5*AVcc
@@ -48,9 +51,7 @@ void TimerA_UART_init(void);
 void TimerA_UART_tx(unsigned char byte);
 void TimerA_UART_print(char *string);
 
-#include <msp430.h>
-#include "ds.h"
-#include <stdint.h>
+
 
 
 
