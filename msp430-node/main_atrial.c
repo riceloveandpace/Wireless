@@ -117,6 +117,7 @@ void main(void) {
         head_dp = (head_dp+1) % 50;
         recentdatapoints[head_dp] = sample;
         temp += sample;
+
         for (int i = 1; i++; i < winLen) {
             if ((head_dp - i) < 0) {
                 temp += recentdatapoints[head_dp - i + 50];
@@ -130,7 +131,7 @@ void main(void) {
         }
 
         temp = abs(temp);
-        ennew = sumAbs - temp;
+        ennew = sumAbs - temp; // this is wrong 
 
         storen[head_sto] = ennew;
         head_sto = (head_sto+1) % 30;
@@ -159,7 +160,10 @@ void main(void) {
 
             }
 
+        }        
+        if (findEnd) {
             if (storen[head_sto] < ds.noiseAvg) {
+                // finding the end index
                 endInd[head_end] = count + winLen;
                 head_end = (head_end + 1) % 10;
                 ds.findEnd = 0;
