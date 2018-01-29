@@ -1,5 +1,5 @@
 #include <msp430.h>
-#include "ds.h"
+// #include "ds.h"
 #include <stdint.h>
 
 //******************************************************************************
@@ -129,6 +129,11 @@ void main(void) {
                 sumAbs += abs(recentdatapoints[head_dp - i]);
             }
         }
+
+        // form of energy minus mean, except
+        // instead of energy we have the absolute values
+        // and instead of mean we just add all values 
+        // minimizes computations.
 
         temp = abs(temp);
         ennew = sumAbs - temp; // this is wrong 
