@@ -5,29 +5,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-//******************************************************************************
-//  MSP430G2x32/G2x52 Demo - ADC10, Sample A1, AVcc Ref, Set P1.0 if > 0.5*AVcc
-//
-//  Description: A single sample is made on A1 with reference to AVcc.
-//  Software sets ADC10SC to start sample and conversion - ADC10SC
-//  automatically cleared at EOC. ADC10 internal oscillator times sample (16x)
-//  and conversion. In Mainloop MSP430 waits in LPM0 to save power until ADC10
-//  conversion complete, ADC10_ISR will force exit from LPM0 in Mainloop on
-//  reti. If A1 > 0.5*AVcc, P1.0 set, else reset.
-//
-//                MSP430G2x32/G2x52
-//             -----------------
-//         /|\|              XIN|-
-//          | |                 |
-//          --|RST          XOUT|-
-//            |                 |
-//        >---|P1.4/A4      P1.0|-->LED
-//
-//  D. Dang
-//  Texas Instruments Inc.
-//  December 2010
-//  Built with CCS Version 4.2.0 and IAR Embedded Workbench Version: 5.10
-//******************************************************************************
 
 //------------------------------------------------------------------------------
 // Hardware-related definitions
@@ -47,9 +24,31 @@
 unsigned int txData;                        // UART internal variable for TX
 unsigned char rxBuffer;                     // Received UART character
 
+struct node {
+    int data;
+
+    struct node *next;
+    struct node *prev;
+};
+
+typedef struct
+{
+    int thresh;
+    int flip;
+    int len;
+    int noiseAvg;
+    int beatDelay;
+    int beatFallDelay;
+    int last_sample_is_sig;
+    int VV;
+    int findEnd;
+
+} detections;
+
 //------------------------------------------------------------------------------
 // Function prototypes
 //------------------------------------------------------------------------------
+
 void TimerA_UART_init(void);
 void TimerA_UART_tx(unsigned char byte);
 void TimerA_UART_print(char *string);
@@ -57,14 +56,12 @@ struct node * insertFirst(struct node *last, int data);
 struct node * deleteLast(struct node *last);
 struct node * populateListZeros(struct node *last, int size);
 int * getEnergyMeanLastN(struct node *last, int n);
-
-
-
+struct node * updateBuffer(struct node *last, int data);
 
 
 
 void main(void) {
-    WDTCTL = WDTPW | WDTHOLD;	// Stop watchdog timer
+    WDTCTL = WDTPW | WDTHOLD;   // Stop watchdog timer
 
     BCSCTL3 = XCAP_3; //enable 12.5 pF oscillator
 
@@ -91,14 +88,11 @@ void main(void) {
 
     int winLen = 5; // len of window to calculate energy
     int storLen = 30; // len of energy to store
-    int ennew, k, next;
-    int tempen, order, h, t;
-    int sumAbs = 0; %
-    int count = 0;  %
-    int temp = 0;   %
-    int head_sto = 0;
-    int head_start = 0;
-    int head_end = 0;
+    int ennew, k;
+    int tempen;
+    int sumAbs = 0;
+    int count = 0;
+    int temp = 0;
 
     // int PeakInd[10] = {0};
     // int storen[30] = {0};
@@ -106,28 +100,23 @@ void main(void) {
     // int startInd[10] = {0};
     // int endInd[10] = {0};
 
-    struct node {
-		int data;
 
-		struct node *next;
-		struct node *prev;
-	};
 
-	struct node *recentdatapoints = NULL;
-	recentdatapoints = populateListZeros(recentdatapoints,ds.VV);
+    struct node *recentdatapoints = NULL;
+    recentdatapoints = populateListZeros(recentdatapoints,ds.VV);
 
-	struct node *storen = NULL;
-	storen = populateListZeros(storen,storLen);
+    struct node *storen = NULL;
+    storen = populateListZeros(storen,storLen);
 
-	struct node *recentBools = NULL;
-	recentBools = populateListZeros(recentBools, 6);
+    struct node *recentBools = NULL;
+    recentBools = populateListZeros(recentBools, 6);
 
     struct node *startInd = NULL;
     startInd = populateListZeros(startInd, 10);
 
     struct node *peakInd = NULL;
     startInd = populateListZeros(peakInd, 10);
-   
+
     struct node *endInd = NULL;
     startInd = populateListZeros(endInd, 10);
 
@@ -142,27 +131,27 @@ void main(void) {
         int sample = ADC10MEM;
         count++;
       //   head_dp = (head_dp+1) % 50;
-		//   last
-		  recentdatapoints = updateBuffer(recentdatapoints, sample);
+        //   last
+          recentdatapoints = updateBuffer(recentdatapoints, sample);
       //   recentdatapoints[head_dp] = sample;
       //   temp += sample;
 
-		  int *b;
-		  b = getEnergyMeanLastN(last, winLen);
-			temp = b[0];
-			sumAbs = b[1];
+          int *b;
+          b = getEnergyMeanLastN(recentdatapoints, winLen);
+            temp = b[0];
+            sumAbs = b[1];
 
         // form of energy minus mean, except
         // instead of energy we have the absolute values
-        // and instead of mean we just add all values 
+        // and instead of mean we just add all values
         // minimizes computations.
 
         temp = abs(temp);
-        ennew = sumAbs - temp; // this is wrong 
+        ennew = sumAbs - temp; // this is wrong
 
-			// STOPPED EDITING CODE HERE. COME BACK TO THIS LINE TOMROROW@@@@
+            // STOPPED EDITING CODE HERE. COME BACK TO THIS LINE TOMROROW@@@@
         storen = updateBuffer(storen, ennew);
-		//   storen[head_sto] = ennew;
+        //   storen[head_sto] = ennew;
       //   head_sto = (head_sto+1) % 30;
 
         ds.beatDelay++;
@@ -176,15 +165,16 @@ void main(void) {
         // head_bool = (head_bool+1)%6;
 
 
-        boolSum = 0;
+        int boolSum = 0;
         struct node *tempptr = recentBools->next;
-        for (int i=0; i<6; i++) {
+        int i;
+        for (i=0; i<6; i++) {
             boolSum += tempptr->data;
             tempptr = tempptr->next;
         }
 
-        temp2 = ds.len + ds.len;
-        count2 = 0;
+        int temp2 = ds.len + ds.len;
+        int count2 = 0;
         while (temp2 >= 3) {
             temp2 -=3;
             count2++;
@@ -228,8 +218,8 @@ void main(void) {
             }
 
         }
-                
-        if (findEnd) {
+
+        if (ds.findEnd) {
             if (storen->next->data < ds.noiseAvg) {
                 // finding the end index
                 updateBuffer(endInd, count + winLen);
@@ -285,7 +275,7 @@ struct node * insertFirst(struct node *last, int data) {
    //create a link
    struct node *link = (struct node*) malloc(sizeof(struct node));
    link->data = data;
-	
+
    if (last == NULL) {
       // isEmpty
       last = link;
@@ -295,14 +285,14 @@ struct node * insertFirst(struct node *last, int data) {
       last->next->prev = link;
       link->next = last->next;
       link->prev = last;
-      
+
       last->next = link;
       if (last->prev == last) {
          last->prev = link;
-      } 
+      }
    }
 
-   return last;    
+   return last;
 }
 
 struct node * deleteLast(struct node *last) {
@@ -351,7 +341,7 @@ struct node * updateBuffer(struct node *last, int data) {
 
 int * getEnergyMeanLastN(struct node *last, int n) {
    struct node *ptr = last->next; // pointer to head
-   int* data = malloc(sizeof(int) * 2);    
+   int* data = malloc(sizeof(int) * 2);
    int j;
 
    if(last != NULL) {
@@ -366,12 +356,4 @@ int * getEnergyMeanLastN(struct node *last, int n) {
    }
 
    return data;
-}
-
-int getHeadData(struct node *last) {
-    if (last == NULL) {
-        return NULL;
-    }
-    struct node * head = last->next;
-    return head->data;
 }
