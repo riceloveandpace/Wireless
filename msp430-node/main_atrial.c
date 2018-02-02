@@ -1,6 +1,9 @@
 #include <msp430.h>
-// #include "ds.h"
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
 
 //******************************************************************************
 //  MSP430G2x32/G2x52 Demo - ADC10, Sample A1, AVcc Ref, Set P1.0 if > 0.5*AVcc
@@ -50,6 +53,10 @@ unsigned char rxBuffer;                     // Received UART character
 void TimerA_UART_init(void);
 void TimerA_UART_tx(unsigned char byte);
 void TimerA_UART_print(char *string);
+struct node * insertFirst(struct node *last, int data);
+struct node * deleteLast(struct node *last);
+struct node * populateListZeros(struct node *last, int size);
+int * getEnergyMeanLastN(struct node *last, int n);
 
 
 
@@ -89,20 +96,40 @@ void main(void) {
     int sumAbs = 0; %
     int count = 0;  %
     int temp = 0;   %
-    int head_dp = -1;  %
     int head_sto = 0;
     int head_start = 0;
     int head_end = 0;
 
-    int PeakInd[10] = {0};
-    int storen[30] = {0};
-    int recentBools[6] = {0};
-    int startInd[10] = {0};
-    int endInd[10] = {0};
-    int recentdatapoints[50] = {0}; %
+    // int PeakInd[10] = {0};
+    // int storen[30] = {0};
+    // int recentBools[6] = {0};
+    // int startInd[10] = {0};
+    // int endInd[10] = {0};
 
+    struct node {
+		int data;
 
+		struct node *next;
+		struct node *prev;
+	};
 
+	struct node *recentdatapoints = NULL;
+	recentdatapoints = populateListZeros(recentdatapoints,ds.VV);
+
+	struct node *storen = NULL;
+	storen = populateListZeros(storen,storLen);
+
+	struct node *recentBools = NULL;
+	recentBools = populateListZeros(recentBools, 6);
+
+    struct node *startInd = NULL;
+    startInd = populateListZeros(startInd, 10);
+
+    struct node *peakInd = NULL;
+    startInd = populateListZeros(peakInd, 10);
+   
+    struct node *endInd = NULL;
+    startInd = populateListZeros(endInd, 10);
 
 
 
@@ -113,22 +140,17 @@ void main(void) {
 
         __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
         int sample = ADC10MEM;
-        count++
-        head_dp = (head_dp+1) % 50;
-        recentdatapoints[head_dp] = sample;
-        temp += sample;
+        count++;
+      //   head_dp = (head_dp+1) % 50;
+		//   last
+		  recentdatapoints = updateBuffer(recentdatapoints, sample);
+      //   recentdatapoints[head_dp] = sample;
+      //   temp += sample;
 
-        for (int i = 1; i++; i < winLen) {
-            if ((head_dp - i) < 0) {
-                temp += recentdatapoints[head_dp - i + 50];
-                sumAbs += abs(recentdatapoints[head_dp - i + 50]);
-            }
-
-            else {
-                temp += recentdatapoints[head_dp - i];
-                sumAbs += abs(recentdatapoints[head_dp - i]);
-            }
-        }
+		  int *b;
+		  b = getEnergyMeanLastN(last, winLen);
+			temp = b[0];
+			sumAbs = b[1];
 
         // form of energy minus mean, except
         // instead of energy we have the absolute values
@@ -138,39 +160,81 @@ void main(void) {
         temp = abs(temp);
         ennew = sumAbs - temp; // this is wrong 
 
-        storen[head_sto] = ennew;
-        head_sto = (head_sto+1) % 30;
+			// STOPPED EDITING CODE HERE. COME BACK TO THIS LINE TOMROROW@@@@
+        storen = updateBuffer(storen, ennew);
+		//   storen[head_sto] = ennew;
+      //   head_sto = (head_sto+1) % 30;
 
         ds.beatDelay++;
         ds.beatFallDelay++;
 
 
+        //  this part is single peak finder
+
+        recentBools = updateBuffer(recentBools, abs(sample) > ds.thresh);
+        // recentBools[head_bool] = abs(sample) > ds.thresh;
+        // head_bool = (head_bool+1)%6;
+
+
+        boolSum = 0;
+        struct node *tempptr = recentBools->next;
+        for (int i=0; i<6; i++) {
+            boolSum += tempptr->data;
+            tempptr = tempptr->next;
+        }
+
+        temp2 = ds.len + ds.len;
+        count2 = 0;
+        while (temp2 >= 3) {
+            temp2 -=3;
+            count2++;
+        }
+
+        if ((boolSum > count2) && (ds.beatDelay >= ds.beatFallDelay) && (ds.beatFallDelay > ds.VV)) {
+            if (ds.last_sample_is_sig == 0) {
+                ds.beatDelay = 0;
+                peakInd = updateBuffer(peakInd, count);
+                // PeakInd[head_peak] = count;
+                // head_peak = (head_peak+1)%10;
+                ds.last_sample_is_sig = 1;
+            }
+        }
+
+        else {
+            if (ds.last_sample_is_sig == 1) {
+                ds.beatFallDelay = 0;
+                ds.last_sample_is_sig = 0;
+            }
+        }
+
         if (ds.last_sample_is_sig == 1) {
             ds.findEnd = 1;
-            tempen = storen[head_sto];
+            struct node *tempptr = storen->next;
+            tempen = tempptr->data;
+            // tempen = storen[head_sto];
             k = 0;
             while (tempen >= ds.noiseAvg) {
                 k++;
-                if ((head_sto - k)<0) {
-                    tempen = storen[head_sto-k+30];
-                }
-                else {
-                    tempen = storen[head_sto - k];
-                }
+                tempptr = tempptr->next;
+                tempen = tempptr->data;
 
                 if (tempen < ds.noiseAvg) {
-                    startInd[head_start] = count - k - winLen;
-                    head_start = (head_start + 1) % 10;
+                    // energy below noise threshold
+                    updateBuffer(startInd, count - k - winLen);
+                    // startInd[head_start] = count - k - winLen;
+                    // head_start = (head_start + 1) % 10;
                 }
 
             }
 
-        }        
+        }
+                
         if (findEnd) {
-            if (storen[head_sto] < ds.noiseAvg) {
+            if (storen->next->data < ds.noiseAvg) {
                 // finding the end index
-                endInd[head_end] = count + winLen;
-                head_end = (head_end + 1) % 10;
+                updateBuffer(endInd, count + winLen);
+                // endInd[head_end] = count + winLen;
+                // head_end = (head_end + 1) % 10;
                 ds.findEnd = 0;
             }
         }
@@ -213,48 +277,101 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 }
 
 
-int reset(buffer * cbuf)
-{
-    int r = -1;
 
-    if(cbuf)
-    {
-        cbuf->head = 0;
-        cbuf->tail = 0;
-        r = 0;
+
+//insert link at the first location
+struct node * insertFirst(struct node *last, int data) {
+
+   //create a link
+   struct node *link = (struct node*) malloc(sizeof(struct node));
+   link->data = data;
+	
+   if (last == NULL) {
+      // isEmpty
+      last = link;
+      last->next = last;
+      last->prev = last;
+   } else {
+      last->next->prev = link;
+      link->next = last->next;
+      link->prev = last;
+      
+      last->next = link;
+      if (last->prev == last) {
+         last->prev = link;
+      } 
+   }
+
+   return last;    
+}
+
+struct node * deleteLast(struct node *last) {
+   struct node * newtail;
+   struct node * head;
+   struct node * tempnode;
+
+   if(last->next == last) {
+      last = NULL;
+      return last;
+   }
+
+   newtail = last->prev;
+   head = last->next;
+   tempnode = last;
+
+   newtail->next = head;
+   head->prev = newtail;
+   last = newtail;
+   free(tempnode);
+
+   return last;
+}
+
+
+struct node * populateListZeros(struct node *last, int size) {
+   // create list of zeros of the size specified
+   int i;
+   for (i=0;i<size;i++) {
+      // add links to the list all of value zero
+      last = insertFirst(last, 0);
+   }
+   return last;
+}
+
+struct node * updateBuffer(struct node *last, int data) {
+   if (last == NULL) {
+      return last;
+   }
+
+   // delete last and then add first
+   last = deleteLast(last);
+   last = insertFirst(last, data);
+   return last;
+}
+
+int * getEnergyMeanLastN(struct node *last, int n) {
+   struct node *ptr = last->next; // pointer to head
+   int* data = malloc(sizeof(int) * 2);    
+   int j;
+
+   if(last != NULL) {
+      for (j=0;j<n;j++) {
+         data[0] += ptr->data;
+         data[1] += abs(ptr->data); // absolute value
+         ptr = ptr->next;
+         if (ptr == last->next) {
+            break;
+         }
+      }
+   }
+
+   return data;
+}
+
+int getHeadData(struct node *last) {
+    if (last == NULL) {
+        return NULL;
     }
-    return r;
-}
-
-void put(buffer * cbuf, int data)
-{
-    if(cbuf)
-    {
-        cbuf->buffer[cbuf->head] = data;
-        cbuf->head = (cbuf->head + 1) % cbuf->size;
-
-        if(cbuf->head == cbuf->tail)
-        {
-            cbuf->tail = (cbuf->tail + 1) % cbuf->size;
-        }
-    }
-
-}
-
-
-
-
-int empty(buffer cbuf)
-{
-    // We define empty as head == tail
-    return (cbuf.head == cbuf.tail);
-}
-
-
-int full(buffer cbuf)
-{
-    // We determine "full" case by head being one position behind the tail
-    // Note that this means we are wasting one space in the buffer!
-    // Instead, you could have an "empty" flag and determine buffer full that way
-    return ((cbuf.head + 1) % cbuf.size) == cbuf.tail;
+    struct node * head = last->next;
+    return head->data;
 }
