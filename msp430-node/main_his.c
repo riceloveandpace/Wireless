@@ -78,6 +78,12 @@ unsigned int maxI = 0;
 static int MaxAV = 220;
 static int MaxRepeat = 10;
 static int CountLeft = 10;
+
+// Hardcoded Hacks
+// each of these arrays corresponds to the hardcoded labels on signal data
+// a_einds - atrial end indicies
+// v_sinds - ventricle start indicies
+// v_einds - ventrical end indicies
 static const uint16_t a_einds[11] = {702,1475,2484,3385,4344,5239,6173,7078,7690,8641,9548};
 static const uint16_t v_sinds[11] = {757,1598,2586,3493,4450,5347,6277,7187,7796,8768,9658};
 static const uint16_t v_einds[11] = {899,1680,2667,3574,4530,5428,6357,7278,7937,8848,9740};
@@ -93,158 +99,153 @@ int j;
 //int Atrial_End_Crossed, Ventricle_End_Crossed, Ventricle_Start_Crossed;
 int main(void)
 {
-  WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
+	WDTCTL = WDTPW + WDTHOLD;                 // Stop WDT
   
 
-//    Atrial_End_Crossed = 0; Ventricle_End_Crossed = 0; Ventricle_Start_Crossed = 0;
+	//    Atrial_End_Crossed = 0; Ventricle_End_Crossed = 0; Ventricle_Start_Crossed = 0;
 	// Initialize components
 	//init_SPI_Slave();
 
-    x=0;
+	x=0;
 
-  BCSCTL3 = XCAP_3; //enable 12.5 pF oscillator
+	BCSCTL3 = XCAP_3; //enable 12.5 pF oscillator
 
-  ADC10CTL0 = ADC10SHT_1 + ADC10SR + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled, 8 conversion clocks (13+8=21 clocks total)
-  ADC10CTL1 = INCH_0 + ADC10DF + ADC10SSEL_1;                       // input A0, no clock divider; 2's complement out; ACLK select; single channel-single conversion
-  ADC10AE0 |= BIT0;                         // PA.0 ADC option select
-  P1DIR = 0xFF & ~(CS_BIT + SCL_BIT + MOSI_BIT + BIT0 + BIT3);               // Set all pins but RXD and A4 to output
-  
-  
-  P1IE |=  BIT3;                            // P1.3 interrupt enabled
-  P1IES &= ~BIT3;                            // P1.3 Hi/lo edge
-  P1REN |= BIT3;							// Enable Pull Up on SW2 (P1.3)
-  P1IFG &= ~BIT3;                           // P1.3 IFG cleared
-    	  	  	  	  	  	  	  	  	    //BIT3 on Port 1 can be used as Switch2
-	
+	ADC10CTL0 = ADC10SHT_1 + ADC10SR + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled, 8 conversion clocks (13+8=21 clocks total)
+	ADC10CTL1 = INCH_0 + ADC10DF + ADC10SSEL_1;                       // input A0, no clock divider; 2's complement out; ACLK select; single channel-single conversion
+	ADC10AE0 |= BIT0;                         // PA.0 ADC option select
+	P1DIR = 0xFF & ~(CS_BIT + SCL_BIT + MOSI_BIT + BIT0 + BIT3);               // Set all pins but RXD and A4 to output
+
+
+	P1IE |=  BIT3;                            // P1.3 interrupt enabled
+	P1IES &= ~BIT3;                            // P1.3 Hi/lo edge
+	P1REN |= BIT3;							// Enable Pull Up on SW2 (P1.3)
+	P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+											//BIT3 on Port 1 can be used as Switch2
+
 	P1OUT =  MISO_BIT;
-    P1OUT &= ~ADC_BIT;
+	P1OUT &= ~ADC_BIT;
 
 	P2DIR = 0xFF & ~(BIT0);
 	P2OUT =  0;
 	//P2SEL = 
- // P2IE |=  BIT0;                            // P2.0 interrupt enabled
- // P2IES |= BIT0;                            // P2.0 Hi/lo edge
- // P2REN |= BIT0;							// Enable Pull Up on SW2 (P2.0)
+	// P2IE |=  BIT0;                            // P2.0 interrupt enabled
+ 	// P2IES |= BIT0;                            // P2.0 Hi/lo edge
+ 	// P2REN |= BIT0;							// Enable Pull Up on SW2 (P2.0)
 
-  //P2IFG &= ~BIT0;                           // P2.0 IFG cleared
+  	//P2IFG &= ~BIT0;                           // P2.0 IFG cleared
 
-  TACCTL0 = CCIE;                             // CCR0 interrupt enabled
-  TACCR0 = 32;
-  TACTL = TASSEL_1 + MC_1;                  // ACLK, upmode
+	TACCTL0 = CCIE;                             // CCR0 interrupt enabled
+  	TACCR0 = 32;
+  	TACTL = TASSEL_1 + MC_1;                  // ACLK, upmode
 
-  timeval = 0;
-  idx = 0;
-  sumHis = 0;
-  AEnd_Flag = 0;
-  VEnd_Flag = 0;
-  i = 0;
+	timeval = 0;
+	idx = 0;										// track number of successfully detected beats
+	sumHis = 0;
+	AEnd_Flag = 0;								// Set 1 if Atrial beat detected.
+	VEnd_Flag = 0;								// Set 1 if Ventricle beat end detected
+	i = 0;
 
-  __bis_SR_register(GIE);       // Enter LPM3 w/ interrupt
-
-
-
-  for (;;)
-  {
+	__bis_SR_register(GIE);       // Enter LPM3 w/ interrupt
 
 
-    //receive  int AEnd_Flag, int VEnd_Flag, int v_sind
-    __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
-    int16_t data_in = ADC10MEM;
-    if(idx <= 12){
-        if (timeval == a_einds[idx]) {
-            AEnd_Flag = 1;
-            VEnd_Flag = 0;
-        }
 
-        if ((timeval == v_einds[idx]) && (AEnd_Flag == 1)){
+	for (;;)
+	{	
+	  // 
 
-            VEnd_Flag = 1;
-            v_sind = v_sinds[idx];
-            idx = idx + 1;
-        }
+		//receive  int AEnd_Flag, int VEnd_Flag, int v_sind
+		__bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
+		int16_t data_in = ADC10MEM;
 
+		// 
+		if(idx <= 12){
 
-        if (AEnd_Flag) {
-            //if detected Atrial, Start His Detection
-            if ((VEnd_Flag == 0) && (repeat < MaxRepeat)) {
+			if (timeval == a_einds[idx]) {
+				AEnd_Flag = 1;
+				VEnd_Flag = 0;
+			}
+			// check if sample equals end of ventricle and the end
+			// of the atrial beat has occurred
+			if ((timeval == v_einds[idx]) && (AEnd_Flag == 1)){
 
-                //track how many datapoints within one AV beat
-                if (repeat < MaxRepeat-1){
-                    if (count < CountSize+1){
-                        //count starts from 1, ends with 10
-                        count = count + 1;
-
-                    }
-                    if (count == CountSize+1) {
-                        repeat = repeat + 1; //finishing one repeated search within one AV interval
-                        count = 0;
-                    }
-                }
-
-                if (repeat == MaxRepeat-1) {
-                    if (count < CountLeft+1){ //count starts from 1, ends with CountLeft
-                        count = count + 1;
-                    }
-                    //for end of AV, clear records of count&repeat
-                    if (count == CountLeft+1){
-                        count = 0;
-                        repeat = 0;
-                    }
-                }
-
-                //record current data sample
-                //if a window of data have not collected completely
-                if ( ((repeat < MaxRepeat-1) && (count < CountSize)) || ((repeat == MaxRepeat-1) && (count < CountLeft)) ){ //continue suming vals and diffs
-                   // IndRightNow = IndRightNow + count;
-                    if (data_in > lastHis){
-
-                        tempmaxI[repeat] = timeval;
-                    }
-
-                    sumHis = sumHis + abs(data_in);
-                    lastHis = data_in; //store last his for calc diff later
-
-                }
-                else {
-                    //calc metrics for His Detection
-                    tempmaxV[repeat]= sumHis;
-                    sumHis = 0;
-                    }
+				VEnd_Flag = 1;	// set the end of the ventricle to be true
+				v_sind = v_sinds[idx]; // note the start point of the ventricle beat
+				idx = idx + 1; // increment index of beats
+			}
 
 
-                }
+			if (AEnd_Flag) {
+				//if detected Atrial, Start His Detection
+				if ((VEnd_Flag == 0) && (repeat < MaxRepeat)) {
 
-                //if found the end of V/end of estimated AV range(in case of missing ventricle beat)
+					//track how many datapoints within one AV beat
+					if (repeat < MaxRepeat-1){
+						if (count < CountSize+1){
+							//count starts from 1, ends with 10
+							count = count + 1;
 
-                if (VEnd_Flag){
+						}
+						if (count == CountSize+1) {
+							repeat = repeat + 1; //finishing one repeated search within one AV interval
+							count = 0;
+						}
+					}
 
-                    for (i=1;i<24;i++){
-                        if ((tempmaxV[i+1] > tempmaxV[i])&&(tempmaxI[i+1] < v_sind)){
-                            maxI = tempmaxI[i+1];}
+					if (repeat == MaxRepeat-1) {
+						if (count < CountLeft+1){ //count starts from 1, ends with CountLeft
+							count = count + 1;
+						}
+						//for end of AV, clear records of count&repeat
+						if (count == CountLeft+1){
+							count = 0;
+							repeat = 0;
+						}
+					}
+
+					//record current data sample
+					//if a window of data have not collected completely
+					if ( ((repeat < MaxRepeat-1) && (count < CountSize)) || ((repeat == MaxRepeat-1) && (count < CountLeft)) ){ //continue suming vals and diffs
+						// IndRightNow = IndRightNow + count;
+						if (data_in > lastHis){
+							tempmaxI[repeat] = timeval;
+						}
+
+						sumHis = sumHis + abs(data_in);
+						lastHis = data_in; //store last his for calc diff later
+					}
+					else {
+						//calc metrics for His Detection
+						tempmaxV[repeat]= sumHis;
+						sumHis = 0;
+					}
 
 
-                    }
+				}
 
+					//if found the end of V/end of estimated AV range(in case of missing ventricle beat)
 
-                    Hind[idx-1] = maxI;
-                    volatile int dumbdumb = 0;
-                    if (idx == 11) {
-                        dumbdumb++;
-                    }
-                    for (j=0; j<25; j++){
-                        tempmaxV[j] = 0;
-                        tempmaxI[j] = 0;
-                    }
-                    AEnd_Flag = 0;
+				if (VEnd_Flag) {
 
-                    }
+					for (i=1;i<24;i++){
+						if ((tempmaxV[i+1] > tempmaxV[i])&&(tempmaxI[i+1] < v_sind)) {
+							maxI = tempmaxI[i+1];
+						}
+					}
 
-                }
-
-
-            }
-    }
-
+					Hind[idx-1] = maxI;
+					volatile int dumbdumb = 0;
+					if (idx == 11) {
+						dumbdumb++;
+					}
+					for (j=0; j<25; j++) {
+						tempmaxV[j] = 0;
+						tempmaxI[j] = 0;
+					}
+					AEnd_Flag = 0;
+				}
+			}
+		}
+	}
 }
 
 // Port 2 interrupt service routine
@@ -259,8 +260,8 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 {
 	// Clear interrupt flag
 	
-    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
-    P1OUT ^= BIT7;
+	P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+	P1OUT ^= BIT7;
 	// Trigger new measurement
 	timeval = 0;
 	idx = 0;
@@ -303,29 +304,29 @@ void __attribute__ ((interrupt(ADC10_VECTOR))) ADC10_ISR (void)
 __interrupt void USCI0RX_ISR (void)
 {
 	switch(UCA0RXBUF) {
-	    case 0xC7:
-	        // no update
-	        break;
-	    case 0xC5:
-	        Atrial_End_Crossed = 1;
-	        break;
-	    case 0xC4:
-	        Ventricle_End_Crossed = 1;
-	        break;
-	    case 0xC3:
-	        Ventricle_Start_Crossed = 1;
-	        break;
-	    default:
-	        break;
+		case 0xC7:
+			// no update
+			break;
+		case 0xC5:
+			Atrial_End_Crossed = 1;
+			break;
+		case 0xC4:
+			Ventricle_End_Crossed = 1;
+			break;
+		case 0xC3:
+			Ventricle_Start_Crossed = 1;
+			break;
+		default:
+			break;
 	}
 	//UCA0TXBUF=*(pTX_BUFF++);
 	if (UCA0RXBUF == 0xC7) ; //normal
 	UCA0TXBUF=0xF2;
 	if (x == 0) {
-	    P1OUT ^= BIT7;
-	    x = 1;
+		P1OUT ^= BIT7;
+		x = 1;
 	} else {
-	    x = (x + 1) & 3;
+		x = (x + 1) & 3;
 	}
 }
 
