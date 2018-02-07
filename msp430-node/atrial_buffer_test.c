@@ -97,10 +97,10 @@ void main(void) {
     ADC10AE0 |= BIT4;                         // PA.4 ADC option select
     P1DIR = 0xFF & ~UART_RXD & ~BIT4;               // Set all pins but RXD and A4 to output
 
-    P1IE |= BIT3;                                       // P1.3 Interrupt Enabled
-    P1IES &= ~BIT3;                                 // P1.3 hi/lo edge
-    P1REN |= BIT3;                                      // P1.3 Enable Pull Up on SW2
-    P1IFG &= ~BIT3;                                 // P1.3 IFG Cleared
+   //  P1IE |= BIT3;                                       // P1.3 Interrupt Enabled
+   //  P1IES &= ~BIT3;                                 // P1.3 hi/lo edge
+   //  P1REN |= BIT3;                                      // P1.3 Enable Pull Up on SW2
+   //  P1IFG &= ~BIT3;                                 // P1.3 IFG Cleared
 
     P1OUT = MISO_BIT;
     P1OUT &= ~ADC_BIT;
@@ -108,9 +108,9 @@ void main(void) {
     P2DIR = 0xFF & ~(BIT0);
     P2OUT = 0;
 
-    TACCTL0 = CCIE;                             // CCR2 interrupt enabled
-    TACCR0 = 32;
-    TACTL = TASSEL_1 + MC_1;                    // ACLK, upmode
+   //  TACCTL0 = CCIE;                             // CCR2 interrupt enabled
+   //  TACCR0 = 32;
+   //  TACTL = TASSEL_1 + MC_1;                    // ACLK, upmode
 
 
     detections ds;
@@ -142,110 +142,35 @@ void main(void) {
 
 
 
-    __bis_SR_register(GIE);       // Enter LPM3 w/ interrupt
+   //  __bis_SR_register(GIE);       // Enter LPM3 w/ interrupt
 
-    for (;;)
+   //  for (;;)
     {
-        // turn off the CPU and wait
-        __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
-        // when the ADC conversion is finished the CPU will
-        // turn back on and we can process the data
+      // turn off the CPU and wait
+      // __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
+      // when the ADC conversion is finished the CPU will
+      // turn back on and we can process the data
 
-        int sample = ADC10MEM; // recieve a sample from the ADC
+      int sample = ADC10MEM; // recieve a sample from the ADC
 
-        if (numBeats < 12) {    // only perform data collection for 12 beats
-            sampleNum++;  // increment sampleNum for each new sample
+      struct node *last = NULL;
+      last = populateListZeros(last, 5);
+      // printList(last);
 
-            // add the sample to the buffer of recent data points
-            recentdatapoints = updateBuffer(recentdatapoints, sample);
-
-            // using the buffer of datapoints, calculate the
-            // 'energy' and 'mean', which will just be the sum of
-            // the absolute values, and sum of values in the window.
-            int *b;
-            b = getEnergyMeanLastN(recentdatapoints, winLen);
-            temp = b[0];
-            sumAbs = b[1];
-
-
-            // The algorithm uses a simple form of energy
-            // and mean. Instead of energy it is just the absolute
-            // values and instead of mean, the absolute value of
-            // the sum of values.
-            temp = abs(temp);
-            ennew = sumAbs - temp;
-            storen = updateBuffer(storen, ennew);
-
-            ds.beatDelay++;
-            ds.beatFallDelay++;
-
-
-            //  this part is single peak finder
-
-            recentBools = updateBuffer(recentBools, abs(sample) > ds.thresh);
-
-
-            int boolSum;
-            boolSum = 0;
-            node *tempptr = recentBools->next;
-            int i;
-            for (i=6; i>0; i--) {
-                boolSum += tempptr->data;
-                tempptr = tempptr->next;
-            }
-
-            int temp2 = ds.len + ds.len;
-            int count2 = 0;
-            while (temp2 >= 3) {
-                temp2 -=3;
-                count2++;
-            }
-
-            if ((boolSum > count2) && (ds.beatDelay >= ds.beatFallDelay) && (ds.beatFallDelay > ds.VV)) {
-                if (ds.last_sample_is_sig == 0) {
-                    ds.beatDelay = 0;
-                    peakInd = updateBuffer(peakInd, sampleNum);
-                    ds.last_sample_is_sig = 1;
-                }
-            }
-
-            else {
-                if (ds.last_sample_is_sig == 1) {
-                    ds.beatFallDelay = 0;
-                    ds.last_sample_is_sig = 0;
-                }
-            }
-
-            if (ds.last_sample_is_sig == 1) {
-                ds.findEnd = 1;
-                node *tempptr = storen->next;
-                tempen = tempptr->data;
-                k = 0;
-                while (tempen >= ds.noiseAvg) {
-                    k++;
-                    tempptr = tempptr->next;
-                    tempen = tempptr->data;
-
-                    if (tempen < ds.noiseAvg) {
-                        // energy below noise threshold
-                        updateBuffer(startInd, sampleNum - k - winLen);
-                    }
-
-                }
-
-            }
-
-            if (ds.findEnd) {
-                // if the current data is lower than the average noise
-                if (storen->next->data < ds.noiseAvg) {
-                    // update endInd buffer with the index of the end value
-                    //
-                    updateBuffer(endInd, sampleNum + winLen);
-                    numBeats++;
-                    ds.findEnd = 0;
-                }
-            }
-        }
+      last = updateBuffer(last, 1);
+      // last = deleteLast(last);
+      last = updateBuffer(last, 2);
+      last = updateBuffer(last, 3);
+      last = updateBuffer(last, 4);
+      last = updateBuffer(last, 5);
+      // printf("%d",length(last));
+      // printList(last);
+      int *b;
+      b = getEnergyMeanLastN(last,5);
+      int i;
+      for(i=0;i<2;i++) {
+         printf("BAR[%d]: %d \n", i, *(b+i));
+      }  
     }
 }
 
@@ -266,12 +191,12 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 #endif
 {
     // Clear interrupt flag
-    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
-    P1OUT ^= BIT7;
-    // Trigger new measurement
-    sampleNum = 0;
-    numBeats = 0;
-    // Exit LPM
+   //  P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+   //  P1OUT ^= BIT7;
+   //  // Trigger new measurement
+   //  sampleNum = 0;
+   //  numBeats = 0;
+   //  // Exit LPM
     //_BIC_SR_IRQ();
 }
 
@@ -286,7 +211,7 @@ void __attribute__ ((interrupt(ADC10_VECTOR))) ADC10_ISR (void)
 #endif
 {
     //P1OUT |= 0x01;                            // Toggle P1.0
-    __bic_SR_register_on_exit(CPUOFF);        // Clear CPUOFF bit from 0(SR)
+   //  __bic_SR_register_on_exit(CPUOFF);        // Clear CPUOFF bit from 0(SR)
 }
 
 // Timer A0 interrupt service routine
@@ -301,7 +226,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 {
 //P1OUT ^= 0x01;                            // Toggle P1.0
 
-    ADC10CTL0 |= ENC + ADC10SC;             // Sampling and conversion start
+   //  ADC10CTL0 |= ENC + ADC10SC;             // Sampling and conversion start
 
 }
 

@@ -248,7 +248,7 @@ int main(void)
 	}
 }
 
-// Port 2 interrupt service routine
+// Port 1 interrupt service routine
 #if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
 #pragma vector=PORT1_VECTOR
 __interrupt void Port_1(void)
@@ -261,7 +261,7 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 	// Clear interrupt flag
 	
 	P1IFG &= ~BIT3;                           // P1.3 IFG cleared
-	P1OUT ^= BIT7;
+	P1OUT ^= BIT7;		// verification of sync success
 	// Trigger new measurement
 	timeval = 0;
 	idx = 0;

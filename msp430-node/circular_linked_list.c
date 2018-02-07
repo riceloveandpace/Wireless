@@ -12,6 +12,9 @@ struct node {
    struct node *prev;
 };
 
+typedef struct node node;
+
+
 
 bool isEmpty(struct node *last) {
    return last == NULL;
@@ -39,89 +42,6 @@ int length(struct node *last) {
    return length;
 }
 
-//insert link at the first location
-struct node * insertFirst(struct node *last, int data) {
-
-   //create a link
-   struct node *link = (struct node*) malloc(sizeof(struct node));
-   link->data = data;
-	
-   if (last == NULL) {
-      // isEmpty
-      last = link;
-      last->next = last;
-      last->prev = last;
-   } else {
-      // point link to the old first value
-      // printf("Old First: %p \n", last->next);
-      // printf("Old Last: %p \n", last);
-      last->next->prev = link;
-      link->next = last->next;
-      link->prev = last;
-      
-      // printf("New First: %p \n", link);
-      // printf("New First Next: %p \n", link->next);
-      // printf("New First Prev: %p \n", link->prev);
-      // point the last value to the link
-      last->next = link;
-      if (last->prev == last) {
-         last->prev = link;
-      } 
-      
-      // printf("Last  Next: %p \n", last->next);
-      // printf("Last Prev: %p \n", last->prev);
-      // printf("============= \n");
-   }
-
-   return last;    
-}
-
-struct node * insertLast(struct node *last, int data) {
-   struct node *link = (struct node*) malloc(sizeof(struct node));
-   link->data = data;
-
-   if (last == NULL) {
-      last = link;
-      last->next = last;
-      last->prev = last;
-   } else {
-      link->next = last->next;
-      link->prev = last;
-      last->next = link;
-      last = link;
-   }
-
-   return last;
-}
-
-struct node * deleteLast(struct node *last) {
-   // printf("Deleting Last... \n");
-   struct node * newtail;
-   struct node * head;
-   struct node * temp;
-
-   if(last->next == last) {
-      last = NULL;
-      return last;
-   }
-
-   newtail = last->prev;
-   head = last->next;
-   temp = last;
-   // printf("Newtail: %p \n", newtail);
-   // printf("Head: %p \n", head);
-   // printf("Last: %p \n", last);
-
-   newtail->next = head;
-   head->prev = newtail;
-   last = newtail;
-   // printf("Newtail: %p \n", newtail);
-   // printf("Head: %p \n", head);
-   // printf("Last: %p \n", last);
-   free(temp);
-
-   return last;
-}
 
 //delete first item
 struct node * deleteFirst(struct node *last) {
@@ -171,46 +91,95 @@ void printList(struct node *last) {
    printf(" ] \n");
 }
 
-struct node * populateListZeros(struct node *last, int size) {
-   // create list of zeros of the size specified
-   int i;
-   for (i=0;i<size;i++) {
-      // add links to the list all of value zero
-      last = insertFirst(last, 0);
-   }
-   return last;
+//insert link at the first location
+node * insertFirst(node *last, int data) {
+
+    //create a link
+    node *link = (node*) malloc(sizeof(node));
+    link->data = data;
+
+    if (last == NULL) {
+        // is empty
+        last = link;
+        last->next = last;
+        last->prev = last;
+    } else {
+        last->next->prev = link;
+        link->next = last->next;
+        link->prev = last;
+
+        last->next = link;
+        if (last->prev == last) {
+            last->prev = link;
+        }
+    }
+
+    return last;
 }
 
-struct node * updateBuffer(struct node *last, int data) {
-   if (last == NULL) {
-      return last;
-   }
+node * deleteLast(node *last) {
+    node * newtail;
+    node * head;
+    node * tempnode;
 
-   // delete last and then add first
-   last = deleteLast(last);
-   last = insertFirst(last, data);
-   return last;
+    if(last->next == last) {
+        last = NULL;
+        return last;
+    }
+
+    newtail = last->prev;
+    head = last->next;
+    tempnode = last;
+
+    newtail->next = head;
+    head->prev = newtail;
+    last = newtail;
+    free(tempnode);
+
+    return last;
 }
 
-int * getEnergyMeanLastN(struct node *last, int n) {
-   struct node *ptr = last->next; // pointer to head
-   int* data = malloc(sizeof(int) * 2);    
-   int j;
 
-   if(last != NULL) {
-      for (j=0;j<n;j++) {
-         data[0] += ptr->data;
-         data[1] += (ptr->data > 0) ? ptr->data : -(ptr->data); // absolute value
-         ptr = ptr->next;
-         if (ptr == last->next) {
-            break;
-         }
-      }
-   }
-
-   return data;
-
+node * populateListZeros(node *last, int size) {
+    // create list of zeros of the size specified
+    int i;
+    for (i=0;i<size;i++) {
+        // add links to the list all of value zero
+        last = insertFirst(last, 0);
+    }
+    return last;
 }
+
+node * updateBuffer(node *last, int data) {
+    if (last == NULL) {
+        return last;
+    }
+
+    // delete last and then add first
+    last = deleteLast(last);
+    last = insertFirst(last, data);
+    return last;
+}
+
+int * getEnergyMeanLastN(node *last, int n) {
+    node *ptr = last->next; // pointer to head
+    int* datastore = malloc(sizeof(int) * 2);
+    int j;
+
+    if(last != NULL) {
+        for (j=0;j<n;j++) {
+            datastore[0] += ptr->data;
+            datastore[1] += abs(ptr->data); // absolute value
+            ptr = ptr->next;
+            if (ptr == last->next) {
+                break;
+            }
+        }
+    }
+
+    return datastore;
+}
+
 
 
 
