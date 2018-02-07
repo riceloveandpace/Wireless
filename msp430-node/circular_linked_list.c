@@ -16,13 +16,13 @@ typedef struct node node;
 
 
 
-bool isEmpty(struct node *last) {
+bool isEmpty(node *last) {
    return last == NULL;
 }
 
-int length(struct node *last) {
+int length(node *last) {
    int length = 0;
-   struct node *current;
+   node *current;
 
    //if list is empty
    if(last == NULL) {
@@ -44,9 +44,9 @@ int length(struct node *last) {
 
 
 //delete first item
-struct node * deleteFirst(struct node *last) {
-   struct node * oldhead;
-   struct node * newhead;
+node * deleteFirst(node *last) {
+   node * oldhead;
+   node * newhead;
 
    if(last->next == last) {
      // only one link in the list  
@@ -68,9 +68,9 @@ struct node * deleteFirst(struct node *last) {
 }
 
 //display the list
-void printList(struct node *last) {
+void printList(node *last) {
 
-   struct node *ptr = last->next;
+   node *ptr = last->next;
    printf("\n[ ");
 	
    //start from the beginning
@@ -184,7 +184,7 @@ int * getEnergyMeanLastN(node *last, int n) {
 
 
 int main() {
-   struct node *last = NULL;
+   node *last = NULL;
    last = populateListZeros(last, 5);
    // printList(last);
 
