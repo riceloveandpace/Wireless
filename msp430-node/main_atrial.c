@@ -166,6 +166,7 @@ void main(void) {
             b = getEnergyMeanLastN(recentdatapoints, winLen);
             temp = b[0];
             sumAbs = b[1];
+            free(b);
 
 
             // The algorithm uses a simple form of energy
