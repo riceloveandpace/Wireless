@@ -12,9 +12,7 @@
 "..\..\src\arch\ARM\tivaware\driverlib\rvmdk\driverlib.lib"
 ".\objects\startup_tm4c123.o"
 ".\objects\system_tm4c123.o"
---library_type=microlib
---feedback ".\Objects\stm32_bare_metal_api.fed" --feedback_image=none
---strict --scatter ".\Objects\stm32_bare_metal_api.sct"
---summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--library_type=microlib --strict --scatter ".\Objects\stm32_bare_metal_api.sct"
+--callgraph --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers
 --list ".\Listings\stm32_bare_metal_api.map" -o .\Objects\stm32_bare_metal_api.axf

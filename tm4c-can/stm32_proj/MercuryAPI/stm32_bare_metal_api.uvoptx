@@ -149,25 +149,15 @@
         <Ww>
           <count>0</count>
           <WinNumber>1</WinNumber>
-          <ItemText>SystemCoreClock,0x0A</ItemText>
+          <ItemText>trd.readCount</ItemText>
         </Ww>
         <Ww>
           <count>1</count>
           <WinNumber>1</WinNumber>
-          <ItemText>0x400FED28</ItemText>
-        </Ww>
-        <Ww>
-          <count>2</count>
-          <WinNumber>1</WinNumber>
-          <ItemText>trd.readCount</ItemText>
-        </Ww>
-        <Ww>
-          <count>3</count>
-          <WinNumber>1</WinNumber>
           <ItemText>tag_data_out</ItemText>
         </Ww>
         <Ww>
-          <count>4</count>
+          <count>2</count>
           <WinNumber>1</WinNumber>
           <ItemText>g_ui32Counter</ItemText>
         </Ww>
