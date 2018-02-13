@@ -38,14 +38,6 @@ unsigned char rxBuffer;                     // Received UART character
 //------------------------------------------------------------------------------
 // Custom Structs
 //------------------------------------------------------------------------------
-struct node {
-    int data;
-
-    struct node *next;
-    struct node *prev;
-};
-
-typedef struct node node;
 
 typedef struct
 {
@@ -67,51 +59,17 @@ typedef struct
 void TimerA_UART_init(void);
 void TimerA_UART_tx(unsigned char byte);
 void TimerA_UART_print(char *string);
-node * insertFirst(node *last, int data);
-node * deleteLast(node *last);
-node * populateListZeros(node *last, int size);
-int * getEnergyMeanLastN(node *last, int n);
-node * updateBuffer(node *last, int data);
+int updateBufferIdx(int size, int head);
+int getNegOffsetIndex(int size, int head, int offset);
 
-
-static const int winLen = 5; // len of window to calculate energy
-static const int storLen = 30; // len of energy to store
-int ennew, k;
-int tempen;
-int sumAbs = 0;
 int sampleNum = 0;
 int numBeats = 0;
-int temp = 0;
 
 
 //------------------------------------------------------------------------------
 // Main Function
 //------------------------------------------------------------------------------
 void main(void) {
-    WDTCTL = WDTPW | WDTHOLD;   // Stop watchdog timer
-
-    BCSCTL3 = XCAP_3; //enable 12.5 pF oscillator
-
-    ADC10CTL0 = ADC10SHT_1 + ADC10SR + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled, 8 conversion clocks (13+8=21 clocks total)
-    ADC10CTL1 = INCH_4 + ADC10DF + ADC10SSEL_1;                       // input A4, no clock divider; 2's complement out; ACLK select; single channel-single conversion
-    ADC10AE0 |= BIT4;                         // PA.4 ADC option select
-    P1DIR = 0xFF & ~UART_RXD & ~BIT4;               // Set all pins but RXD and A4 to output
-
-    P1IE |= BIT3;                                       // P1.3 Interrupt Enabled
-    P1IES &= ~BIT3;                                 // P1.3 hi/lo edge
-    P1REN |= BIT3;                                      // P1.3 Enable Pull Up on SW2
-    P1IFG &= ~BIT3;                                 // P1.3 IFG Cleared
-
-    P1OUT = MISO_BIT;
-    P1OUT &= ~ADC_BIT;
-
-    P2DIR = 0xFF & ~(BIT0);
-    P2OUT = 0;
-
-    TACCTL0 = CCIE;                             // CCR2 interrupt enabled
-    TACCR0 = 32;
-    TACTL = TASSEL_1 + MC_1;                    // ACLK, upmode
-
 
     detections ds;
     ds.thresh= 945;
@@ -125,22 +83,63 @@ void main(void) {
     ds.findEnd = 0;
 
 
-
-    node *recentdatapoints = NULL;
-    recentdatapoints = populateListZeros(recentdatapoints,ds.VV);
-
-    node *storen = NULL;
-    storen = populateListZeros(storen,storLen);
-    node *recentBools = NULL;
-    recentBools = populateListZeros(recentBools, 6);
-    node *startInd = NULL;
-    startInd = populateListZeros(startInd, 10);
-    node *peakInd = NULL;
-    peakInd = populateListZeros(peakInd, 10);
-    node *endInd = NULL;
-    endInd = populateListZeros(endInd, 10);
+    static const int winLen = 5; // len of window to calculate energy
+    static const int storLen = 30; // len of energy to store
+    int ennew, k;
+    int tempen;
+    int sumAbs = 0;
+    int temp = 0;
 
 
+    static const int rdpsize = 50;
+    int rdphead = 0;
+    int recentdatapoints[50] = {0};
+
+    static const int sesize = 30;
+    int sehead = 0;
+    int storen[30] = {0};
+
+    static const int rbsize = 6;
+    int rbhead = 0;
+    int recentBools[6] = {0};
+
+    static const int sisize = 10;
+    int sihead = 0;
+    int startInd[10] = {0};
+
+    static const int pisize = 10;
+    int pihead = 0;
+    int peakInd[10] = {0};
+
+    static const int eisize = 10;
+    int eihead = 0;
+    int endInd[10] = {0};
+
+    WDTCTL = WDTPW | WDTHOLD;   // Stop watchdog timer
+
+    BCSCTL3 = XCAP_3; //enable 12.5 pF oscillator
+
+    ADC10CTL0 = ADC10SHT_1 + ADC10SR + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled, 8 conversion clocks (13+8=21 clocks total)
+    ADC10CTL1 = INCH_4 + ADC10DF + ADC10SSEL_1;                       // input A4, no clock divider; 2's complement out; ACLK select; single channel-single conversion
+    ADC10AE0 |= BIT0;                         // PA.4 ADC option select
+	P1DIR = 0xFF & ~(CS_BIT + SCL_BIT + MOSI_BIT + BIT0 + BIT3);               // Set all pins but RXD and A4 to output
+
+    P1IE |= BIT3;                                       // P1.3 Interrupt Enabled
+    P1IES &= ~BIT3;                                 // P1.3 hi/lo edge
+    P1REN |= BIT3;                                      // P1.3 Enable Pull Up on SW2
+    P1IFG &= ~BIT3;                                 // P1.3 IFG Cleared
+
+    P1OUT = MISO_BIT;
+    P1OUT &= ~ADC_BIT;
+
+
+
+    P2DIR = 0xFF & ~(BIT0);
+    P2OUT = 0;
+
+    TACCTL0 = CCIE;                             // CCR2 interrupt enabled
+    TACCR0 = 32;
+    TACTL = TASSEL_1 + MC_1;                    // ACLK, upmode
 
     __bis_SR_register(GIE);       // Enter LPM3 w/ interrupt
 
@@ -148,103 +147,108 @@ void main(void) {
     {
         // turn off the CPU and wait
         __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
-        // when the ADC conversion is finished the CPU will
-        // turn back on and we can process the data
+        
+        int sample = ADC10MEM; // receive a sample from the ADC
 
-        int sample = ADC10MEM; // recieve a sample from the ADC
-
-        if (numBeats < 12) {    // only perform data collection for 12 beats
-            sampleNum++;  // increment sampleNum for each new sample
-
-            // add the sample to the buffer of recent data points
-            recentdatapoints = updateBuffer(recentdatapoints, sample);
-
-            // using the buffer of datapoints, calculate the
-            // 'energy' and 'mean', which will just be the sum of
-            // the absolute values, and sum of values in the window.
-            int *b;
-            b = getEnergyMeanLastN(recentdatapoints, winLen);
-            temp = b[0];
-            sumAbs = b[1];
-            free(b);
-
-
-            // The algorithm uses a simple form of energy
-            // and mean. Instead of energy it is just the absolute
-            // values and instead of mean, the absolute value of
-            // the sum of values.
-            temp = abs(temp);
-            ennew = sumAbs - temp;
-            storen = updateBuffer(storen, ennew);
-
-            ds.beatDelay++;
-            ds.beatFallDelay++;
-
-
-            //  this part is single peak finder
-
-            recentBools = updateBuffer(recentBools, abs(sample) > ds.thresh);
-
-
-            int boolSum;
-            boolSum = 0;
-            node *tempptr = recentBools->next;
+        // add the sample to the buffer of recent data points
+        rdphead = updateBufferIdx(rdpsize, rdphead);
+        recentdatapoints[rdphead] = sample;
+        {
             int i;
-            for (i=6; i>0; i--) {
-                boolSum += tempptr->data;
-                tempptr = tempptr->next;
+            int temphead;
+            for (i=0; i<winLen;i++) {
+                temphead = getNegOffsetIndex(rdpsize, rdphead, i);
+                temp += recentdatapoints[temphead];
+                sumAbs += abs(temp);
             }
+        }
 
-            int temp2 = ds.len + ds.len;
-            int count2 = 0;
-            while (temp2 >= 3) {
-                temp2 -=3;
-                count2++;
+
+        // The algorithm uses a simple form of energy
+        // and mean. Instead of energy it is just the absolute
+        // values and instead of mean, the absolute value of
+        // the sum of values.
+        temp = abs(temp);
+        ennew = sumAbs - temp;
+        sehead = updateBufferIdx(storLen, sehead);
+        storen[sehead] = ennew;
+        // storen = updateBufferIdx(storen, ennew);
+
+        ds.beatDelay++;
+        ds.beatFallDelay++;
+
+
+        //  this part is single peak finder
+
+        rbhead = updateBufferIdx(rbsize, rbhead);
+        recentBools[rbhead] = abs(sample) > ds.thresh;
+        // recentBools = updateBufferIdx(recentBools, abs(sample) > ds.thresh);
+
+
+        int boolSum;
+        boolSum = 0;
+        {
+            int i;
+            for (i=0; i<6; i++) {
+                boolSum += recentBools[i];
             }
+        }
 
-            if ((boolSum > count2) && (ds.beatDelay >= ds.beatFallDelay) && (ds.beatFallDelay > ds.VV)) {
-                if (ds.last_sample_is_sig == 0) {
-                    ds.beatDelay = 0;
-                    peakInd = updateBuffer(peakInd, sampleNum);
-                    ds.last_sample_is_sig = 1;
-                }
+        int temp2 = ds.len + ds.len; // 12
+        int count2 = 0;
+        while (temp2 >= 3) { // 4
+            temp2 -=3;
+            count2++;
+        }
+
+        if ((boolSum > count2) && (ds.beatDelay >= ds.beatFallDelay) && (ds.beatFallDelay > ds.VV)) {
+            if (ds.last_sample_is_sig == 0) {
+                ds.beatDelay = 0;
+                pihead = updateBufferIdx(pisize, pihead);
+                peakInd[pihead] = sampleNum;
+                ds.last_sample_is_sig = 1;
             }
+        }
 
-            else {
-                if (ds.last_sample_is_sig == 1) {
-                    ds.beatFallDelay = 0;
-                    ds.last_sample_is_sig = 0;
-                }
-            }
-
+        else {
             if (ds.last_sample_is_sig == 1) {
-                ds.findEnd = 1;
-                node *tempptr = storen->next;
-                tempen = tempptr->data;
-                k = 0;
-                while (tempen >= ds.noiseAvg) {
-                    k++;
-                    tempptr = tempptr->next;
-                    tempen = tempptr->data;
+                ds.beatFallDelay = 0;
+                ds.last_sample_is_sig = 0;
+            }
+        }
 
-                    if (tempen < ds.noiseAvg) {
-                        // energy below noise threshold
-                        updateBuffer(startInd, sampleNum - k - winLen);
-                    }
+        if (ds.last_sample_is_sig == 1) {
+            ds.findEnd = 1;
 
+            // node *tempptr = storen->next;
+
+            int tempptr = sehead;
+            tempen = storen[sehead];
+            // tempen = tempptr->data;
+            k = 0;
+            while (tempen >= ds.noiseAvg) {
+                k++;
+                tempptr = getNegOffsetIndex(sesize, sehead, k);
+                tempen = storen[tempptr];
+                if (tempen < ds.noiseAvg) {
+                    // energy below noise threshold
+                    sihead = updateBufferIdx(sisize, sihead);
+                    startInd[sihead] = sampleNum - k - winLen;
                 }
 
             }
 
-            if (ds.findEnd) {
-                // if the current data is lower than the average noise
-                if (storen->next->data < ds.noiseAvg) {
-                    // update endInd buffer with the index of the end value
-                    //
-                    updateBuffer(endInd, sampleNum + winLen);
-                    numBeats++;
-                    ds.findEnd = 0;
-                }
+        }
+
+        if (ds.findEnd) {
+            // if the current data is lower than the average noise
+            if (storen[sehead] < ds.noiseAvg) {
+                // update endInd buffer with the index of the end value
+                //
+                eihead = updateBufferIdx(eisize, eihead);
+                endInd[eihead] = sampleNum + winLen;
+                numBeats++;
+                ds.findEnd = 0;
             }
         }
     }
@@ -272,8 +276,6 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
     // Trigger new measurement
     sampleNum = 0;
     numBeats = 0;
-    // Exit LPM
-    //_BIC_SR_IRQ();
 }
 
 // ADC10 interrupt service routine
@@ -303,7 +305,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 //P1OUT ^= 0x01;                            // Toggle P1.0
 
     ADC10CTL0 |= ENC + ADC10SC;             // Sampling and conversion start
-
+    sampleNum++;
 }
 
 
@@ -312,90 +314,29 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 // Subfunctions for node struct
 //------------------------------------------------------------------------------
 
-//insert link at the first location
-node * insertFirst(node *last, int data) {
-
-    //create a link
-    node *link = (node*) malloc(sizeof(node));
-    link->data = data;
-
-    if (last == NULL) {
-        // is empty
-        last = link;
-        last->next = last;
-        last->prev = last;
-    } else {
-        last->next->prev = link;
-        link->next = last->next;
-        link->prev = last;
-
-        last->next = link;
-        if (last->prev == last) {
-            last->prev = link;
-        }
-    }
-
-    return last;
+int updateBufferIdx(int size, int head) {
+   // manipulates buffer by updating head value
+   // then adding in new value for buffer head
+   head++;
+   if (head >= size) {
+      // wrap the head pointer around array
+      head = head - size;
+   }
+   return head;
 }
 
-node * deleteLast(node *last) {
-    node * newtail;
-    node * head;
-    node * tempnode;
+int getNegOffsetIndex(int size, int head, int offset) {
+   int temphead;
+   // listlen = 2;
+   // current head = 1;
+   // n = 2;
+   // head - n = 3;
+   // realindex = 3;
+   if (offset > head) {
+      temphead = size + head - offset;
+   } else {
+      temphead = head - offset;
+   }
 
-    if(last->next == last) {
-        last = NULL;
-        return last;
-    }
-
-    newtail = last->prev;
-    head = last->next;
-    tempnode = last;
-
-    newtail->next = head;
-    head->prev = newtail;
-    last = newtail;
-    free(tempnode);
-
-    return last;
-}
-
-node * populateListZeros(node *last, int size) {
-    // create list of zeros of the size specified
-    int i;
-    for (i=0;i<size;i++) {
-        // add links to the list all of value zero
-        last = insertFirst(last, 0);
-    }
-    return last;
-}
-
-node * updateBuffer(node *last, int data) {
-    if (last == NULL) {
-        return last;
-    }
-
-    // delete last and then add first
-    last = deleteLast(last);
-    last = insertFirst(last, data);
-    return last;
-}
-
-int * getEnergyMeanLastN(node *last, int n) {
-    node *ptr = last->next; // pointer to head
-    int* datastore = malloc(sizeof(int) * 2);
-    int j;
-
-    if(last != NULL) {
-        for (j=0;j<n;j++) {
-            datastore[0] += ptr->data;
-            datastore[1] += abs(ptr->data); // absolute value
-            ptr = ptr->next;
-            if (ptr == last->next) {
-                break;
-            }
-        }
-    }
-
-    return datastore;
+   return temphead;
 }
