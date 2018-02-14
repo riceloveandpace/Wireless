@@ -64,6 +64,40 @@ int getNegOffsetIndex(int size, int head, int offset);
 
 int sampleNum = 0;
 int numBeats = 0;
+char CPUON = 1;
+static const int winLen = 5; // len of window to calculate energy
+static const int storLen = 20; // len of energy to store
+int ennew, k;
+int tempen;
+int sumAbs = 0;
+int temp = 0;
+
+static const int rdpsize = 20;
+char rdphead = 0;
+int recentdatapoints[20];
+
+static const char sesize = 20;
+char sehead = 0;
+int storen[20];
+
+static const char rbsize = 6;
+char rbhead = 0;
+char recentBools; // 6 bits
+
+static const char sisize = 10;
+char sihead = 0;
+int startInd[10];
+
+static const char pisize = 10;
+char pihead = 0;
+int peakInd[10];
+
+static const char eisize = 10;
+char eihead = 0;
+int endInd[10];
+
+
+
 
 
 //------------------------------------------------------------------------------
@@ -78,42 +112,9 @@ void main(void) {
     ds.noiseAvg = 301;                 // currently hardcoded as a calculated average energy of the noise.
     ds.beatDelay = 0;                  // track amount of time since last A or V beat
     ds.beatFallDelay = 0;              // track amount of time since last falling edge of A or V beat
-    ds.VV = 50;                        // num of recent data points to store
+    ds.VV = 20;                        // num of recent data points to store
     ds.last_sample_is_sig = 0;         // flag indicating whether last sample was a A or V beat
     ds.findEnd = 0;
-
-
-    static const int winLen = 5; // len of window to calculate energy
-    static const int storLen = 30; // len of energy to store
-    int ennew, k;
-    int tempen;
-    int sumAbs = 0;
-    int temp = 0;
-
-
-    static const int rdpsize = 50;
-    int rdphead = 0;
-    int recentdatapoints[50] = {0};
-
-    static const int sesize = 30;
-    int sehead = 0;
-    int storen[30] = {0};
-
-    static const int rbsize = 6;
-    int rbhead = 0;
-    int recentBools[6] = {0};
-
-    static const int sisize = 10;
-    int sihead = 0;
-    int startInd[10] = {0};
-
-    static const int pisize = 10;
-    int pihead = 0;
-    int peakInd[10] = {0};
-
-    static const int eisize = 10;
-    int eihead = 0;
-    int endInd[10] = {0};
 
     WDTCTL = WDTPW | WDTHOLD;   // Stop watchdog timer
 
@@ -122,7 +123,7 @@ void main(void) {
     ADC10CTL0 = ADC10SHT_1 + ADC10SR + ADC10ON + ADC10IE; // ADC10ON, interrupt enabled, 8 conversion clocks (13+8=21 clocks total)
     ADC10CTL1 = INCH_4 + ADC10DF + ADC10SSEL_1;                       // input A4, no clock divider; 2's complement out; ACLK select; single channel-single conversion
     ADC10AE0 |= BIT0;                         // PA.4 ADC option select
-	P1DIR = 0xFF & ~(CS_BIT + SCL_BIT + MOSI_BIT + BIT0 + BIT3);               // Set all pins but RXD and A4 to output
+    P1DIR = 0xFF & ~(CS_BIT + SCL_BIT + MOSI_BIT + BIT0 + BIT3);               // Set all pins but RXD and A4 to output
 
     P1IE |= BIT3;                                       // P1.3 Interrupt Enabled
     P1IES &= ~BIT3;                                 // P1.3 hi/lo edge
@@ -146,10 +147,11 @@ void main(void) {
     for (;;)
     {
         // turn off the CPU and wait
-        __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
-        
+//        __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
+        CPUON = 0;
+        while(!CPUON) ;
         int sample = ADC10MEM; // receive a sample from the ADC
-
+        sampleNum++;
         // add the sample to the buffer of recent data points
         rdphead = updateBufferIdx(rdpsize, rdphead);
         recentdatapoints[rdphead] = sample;
@@ -181,16 +183,21 @@ void main(void) {
         //  this part is single peak finder
 
         rbhead = updateBufferIdx(rbsize, rbhead);
-        recentBools[rbhead] = abs(sample) > ds.thresh;
+        {
+            char foo = abs(sample) > ds.thresh;
+            recentBools |= foo << rbhead; // if foo is 1
+            recentBools &= ~(~foo << rbhead); // if foo is 0
+        }
+        // recentBools[rbhead] = abs(sample) > ds.thresh;
         // recentBools = updateBufferIdx(recentBools, abs(sample) > ds.thresh);
-
 
         int boolSum;
         boolSum = 0;
         {
-            int i;
-            for (i=0; i<6; i++) {
-                boolSum += recentBools[i];
+            char i = recentBools;
+            while (i) {
+                boolSum += i & 1;
+                i >>= 1;
             }
         }
 
@@ -289,6 +296,7 @@ void __attribute__ ((interrupt(ADC10_VECTOR))) ADC10_ISR (void)
 #endif
 {
     //P1OUT |= 0x01;                            // Toggle P1.0
+    CPUON = 1;
     __bic_SR_register_on_exit(CPUOFF);        // Clear CPUOFF bit from 0(SR)
 }
 
@@ -305,7 +313,6 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 //P1OUT ^= 0x01;                            // Toggle P1.0
 
     ADC10CTL0 |= ENC + ADC10SC;             // Sampling and conversion start
-    sampleNum++;
 }
 
 
