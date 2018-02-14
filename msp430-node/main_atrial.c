@@ -59,8 +59,8 @@ typedef struct
 void TimerA_UART_init(void);
 void TimerA_UART_tx(unsigned char byte);
 void TimerA_UART_print(char *string);
-int updateBufferIdx(int size, int head);
-int getNegOffsetIndex(int size, int head, int offset);
+char updateBufferIdx(char size, char head);
+char getNegOffsetIndex(char size, char head, char offset);
 
 int sampleNum = 0;
 int numBeats = 0;
@@ -99,7 +99,6 @@ int endInd[10];
 
 
 
-
 //------------------------------------------------------------------------------
 // Main Function
 //------------------------------------------------------------------------------
@@ -115,6 +114,8 @@ void main(void) {
     ds.VV = 20;                        // num of recent data points to store
     ds.last_sample_is_sig = 0;         // flag indicating whether last sample was a A or V beat
     ds.findEnd = 0;
+
+
 
     WDTCTL = WDTPW | WDTHOLD;   // Stop watchdog timer
 
@@ -208,6 +209,10 @@ void main(void) {
             count2++;
         }
 
+        // ***************************************************************************
+        // Single Peak Finder
+        // ***************************************************************************
+
         if ((boolSum > count2) && (ds.beatDelay >= ds.beatFallDelay) && (ds.beatFallDelay > ds.VV)) {
             if (ds.last_sample_is_sig == 0) {
                 ds.beatDelay = 0;
@@ -224,6 +229,13 @@ void main(void) {
             }
         }
 
+        // ***************************************************************************
+        // End Single Peak Finder
+        // Now Find the Start and End Points of the Signal.
+        // This is currently buggy!!!!!!!!!
+        // ***************************************************************************
+
+
         if (ds.last_sample_is_sig == 1) {
             ds.findEnd = 1;
 
@@ -233,16 +245,21 @@ void main(void) {
             tempen = storen[sehead];
             // tempen = tempptr->data;
             k = 0;
+            char testingflag = 0;
             while (tempen >= ds.noiseAvg) {
                 k++;
                 tempptr = getNegOffsetIndex(sesize, sehead, k);
                 tempen = storen[tempptr];
                 if (tempen < ds.noiseAvg) {
+                    testingflag =1;
                     // energy below noise threshold
                     sihead = updateBufferIdx(sisize, sihead);
-                    startInd[sihead] = sampleNum - k - winLen;
+                    startInd[eihead] = sampleNum - k - winLen;
                 }
-
+            }
+            if (!testingflag) {
+                testingflag = 0;
+                break;
             }
 
         }
@@ -297,7 +314,7 @@ void __attribute__ ((interrupt(ADC10_VECTOR))) ADC10_ISR (void)
 {
     //P1OUT |= 0x01;                            // Toggle P1.0
     CPUON = 1;
-    __bic_SR_register_on_exit(CPUOFF);        // Clear CPUOFF bit from 0(SR)
+//    __bic_SR_register_on_exit(CPUOFF);        // Clear CPUOFF bit from 0(SR)
 }
 
 // Timer A0 interrupt service routine
@@ -321,7 +338,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
 // Subfunctions for node struct
 //------------------------------------------------------------------------------
 
-int updateBufferIdx(int size, int head) {
+char updateBufferIdx(char size, char head) {
    // manipulates buffer by updating head value
    // then adding in new value for buffer head
    head++;
@@ -332,8 +349,8 @@ int updateBufferIdx(int size, int head) {
    return head;
 }
 
-int getNegOffsetIndex(int size, int head, int offset) {
-   int temphead;
+char getNegOffsetIndex(char size, char head, char offset) {
+   char temphead;
    // listlen = 2;
    // current head = 1;
    // n = 2;
