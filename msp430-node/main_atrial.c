@@ -69,8 +69,6 @@ static const int winLen = 5; // len of window to calculate energy
 static const int storLen = 20; // len of energy to store
 int ennew, k;
 int tempen;
-int sumAbs = 0;
-int temp = 0;
 
 static const int rdpsize = 20;
 char rdphead = 0;
@@ -147,8 +145,11 @@ void main(void) {
 
     for (;;)
     {
+
+        int sumAbs = 0;
+        int temp = 0;
         // turn off the CPU and wait
-//        __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
+        //        __bis_SR_register(CPUOFF + GIE);        // LPM0, ADC10_ISR will force exit
         CPUON = 0;
         while(!CPUON) ;
         int sample = ADC10MEM; // receive a sample from the ADC
@@ -209,10 +210,6 @@ void main(void) {
             count2++;
         }
 
-        // ***************************************************************************
-        // Single Peak Finder
-        // ***************************************************************************
-
         if ((boolSum > count2) && (ds.beatDelay >= ds.beatFallDelay) && (ds.beatFallDelay > ds.VV)) {
             if (ds.last_sample_is_sig == 0) {
                 ds.beatDelay = 0;
@@ -229,13 +226,6 @@ void main(void) {
             }
         }
 
-        // ***************************************************************************
-        // End Single Peak Finder
-        // Now Find the Start and End Points of the Signal.
-        // This is currently buggy!!!!!!!!!
-        // ***************************************************************************
-
-
         if (ds.last_sample_is_sig == 1) {
             ds.findEnd = 1;
 
@@ -246,6 +236,8 @@ void main(void) {
             // tempen = tempptr->data;
             k = 0;
             char testingflag = 0;
+            sihead = updateBufferIdx(sisize,sihead);
+            startInd[sihead] = sampleNum - 20 - winLen;
             while (tempen >= ds.noiseAvg) {
                 k++;
                 tempptr = getNegOffsetIndex(sesize, sehead, k);
@@ -253,13 +245,16 @@ void main(void) {
                 if (tempen < ds.noiseAvg) {
                     testingflag =1;
                     // energy below noise threshold
-                    sihead = updateBufferIdx(sisize, sihead);
-                    startInd[eihead] = sampleNum - k - winLen;
+                    startInd[sihead] = sampleNum - k - winLen;
+                }
+                if (tempptr == sehead) {
+                    // gone all the way around the array
+                    startInd[sihead] = sampleNum - k - winLen;
                 }
             }
             if (!testingflag) {
                 testingflag = 0;
-                break;
+        //                break;
             }
 
         }
