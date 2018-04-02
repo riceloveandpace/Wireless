@@ -1,91 +1,46 @@
-/* --COPYRIGHT--,BSD_EX
- * Copyright (c) 2012, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- *******************************************************************************
- *
- *                       MSP430 CODE EXAMPLE DISCLAIMER
- *
- * MSP430 code examples are self-contained low-level programs that typically
- * demonstrate a single peripheral function or device feature in a highly
- * concise manner. For this the code may rely on the device's power-on default
- * register values and settings such as the clock configuration and care must
- * be taken when combining code from several examples to avoid potential side
- * effects. Also see www.ti.com/grace for a GUI- and www.ti.com/msp430ware
- * for an API functional library-approach to peripheral configuration.
- *
- * --/COPYRIGHT--*/
-//******************************************************************************
-//   MSP430G2xx3 Demo - USCI_A0, SPI 3-Wire Slave Data Echo
-//
-//   Description: SPI slave talks to SPI master using 3-wire mode. Data received
-//   from master is echoed back.  USCI RX ISR is used to handle communication,
-//   CPU normally in LPM4.  Prior to initial data exchange, master pulses
-//   slaves RST for complete reset.
-//   ACLK = n/a, MCLK = SMCLK = DCO ~1.2MHz
-//
-//   Use with SPI Master Incremented Data code example.  If the slave is in
-//   debug mode, the reset signal from the master will conflict with slave's
-//   JTAG; to work around, use IAR's "Release JTAG on Go" on slave device.  If
-//   breakpoints are set in slave RX ISR, master must stopped also to avoid
-//   overrunning slave RXBUF.
-//
-//                MSP430G2xx3
-//             -----------------
-//         /|\|              XIN|-
-//          | |                 |
-//          | |             XOUT|-
-// Master---+-|RST              |
-//            |             P1.7|-> Data Out (UCB0SIMO)
-//            |                 |
-//            |             P1.6|<- Data In (UCB0SOMI)
-//            |                 |
-//            |             P1.5|-> Serial Clock In (UCB0CLK)
-//
-//   D. Dang
-//   Texas Instruments Inc.
-//   February 2011
-//   Built with CCS Version 4.2.0 and IAR Embedded Workbench Version: 5.10
-//******************************************************************************
 #include <msp430.h>
 #include <stdint.h>
+
+
 
 
 #define PREAMBLE    0xAA
 #define FW_VER      0x02
 
 #define MAX_BUFFER_SIZE     10
+
+unsigned int txData;                        // UART internal variable for TX
+unsigned char rxBuffer;                     // Received UART character
+
+
+//------------------------------------------------------------------------------
+// Custom Defined Bits
+//------------------------------------------------------------------------------
+#define MOSI_BIT    BIT2                                // P1
+#define MISO_BIT    BIT1                                // P1
+#define CS_BIT      BIT5
+#define SCL_BIT     BIT4
+
+#define ADC_BIT     BIT3
+
+#define MOSI_BIT  BIT2 // P1
+#define MISO_BIT  BIT1 // P1
+#define CS_BIT    BIT5 // P1
+#define SCL_BIT    BIT4 // P1
+
+#define ADC_BIT    BIT0 // P1
+#define numThresh   20 //num of thresholds to try
+#define PtoP  600 //peak-to-peak interval assumed
+void init_SPI_Slave(void);
+
 uint8_t TransmitBuffer[MAX_BUFFER_SIZE] = {0};
 uint8_t ReceiveBuffer[MAX_BUFFER_SIZE] = {0};
 uint8_t TXByteCtr = 0;
 uint8_t TransmitIndex = 0;
+
+
+
+
 __inline__ void SendUCB0Data(uint8_t val)
 {
     //while (!(IFG2 & UCB0TXIFG));              // USCI_B0 TX buffer ready?
@@ -140,29 +95,95 @@ void updateRockyRegister(uint8_t reg, uint16_t value) {
     TransmitBuffer[4] = 0x00;
     TXByteCtr = 5;
     TransmitIndex = 0;
-    
+
     P2OUT &= ~(BIT5);
-    
+
     SendUCB0Data(TransmitBuffer[TransmitIndex++]);
-    TXByteCtr--; 
-    
+    TXByteCtr--;
+
     UCB0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
     IE2 |= UCB0RXIE;                          // Enable USCI0 RX interrupt
-  
+
 }
 
 volatile uint8_t sample_ready;
 volatile unsigned int timeval;
-volatile char phaseFlag;
+volatile char phaseFlag = 1;
+
+
+
+
+//------------------------------------------------------------------------------
+// Function prototypes & Variables
+//------------------------------------------------------------------------------
+void TimerA_UART_init(void);
+void TimerA_UART_tx(unsigned char byte);
+void TimerA_UART_print(char *string);
+
+
+int max_val = 0; //max value of data learned
+
+int thresh = 0;  //threshold learned
+
+int noiselvl = 0; //noise level learned
+
+unsigned int lastPI = 0; //last peak index detected
+
+char fall_flag = 0;
+
+int prev = 0;
+
+int countPeak[numThresh+1] = {0};
+
+char findPeak = 0; //flag to find peak index
+
+
+char findEnd = 0;  //flag to find end index
+
+
+int minthresh;
+int maxthresh;
+
+int r[numThresh] = {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+
+int th;
+char i;
+
+
+int count = 0;
+
+int data_in;
+int a;
+volatile unsigned int timeval = 0;
+volatile uint8_t sample_ready;
+
+unsigned int peakInd[5] = {0};
+unsigned int startInd[5] = {0};
+unsigned int endInd[5] = {0};
+char idx = 0;
+
+
+void HeightLearning(int curr, int min_th, int step);
+void NoiseLvlLearning(int data);
+
+void detection(int data);
+
+void diff(int data[]);
+int division(int a, int b);
+
+volatile int sample_not_processed;
+
+
+
 
 int tx_skip= 0;
 int main(void)
 {
   WDTCTL = WDTPW + WDTHOLD;                 // Stop watchdog timer
   BCSCTL3 = XCAP_3; //enable 12.5 pF oscillator
-  
+
   ADC10CTL0 = ADC10SR + ADC10ON + ADC10IE; // + ADC10SHT_1 // ADC10ON, interrupt enabled, 8 conversion clocks (13+8=21 clocks total)
-  
+
   ADC10CTL1 = INCH_4 + ADC10DF;//+ ADC10SSEL_1;   //                     // input A4, no clock divider; 2's complement out; ACLK select; single channel-single conversion
   ADC10AE0 |= BIT4;                         // PA.4 ADC option select
 
@@ -171,11 +192,11 @@ int main(void)
   P2SEL &= ~(BIT5);
   P2SEL2 &= ~(BIT5);
   P2OUT |= BIT5;
-  
+
   TACCTL0 = CCIE;                             // CCR0 interrupt enabled
   TACCR0 = 32;
   TACTL = TASSEL_1 + MC_1;                  // ACLK, upmode
-  
+
   P1SEL = BIT5 + BIT6 + BIT7;
   P1SEL2 = BIT5 + BIT6 + BIT7;
   UCB0CTL1 = UCSWRST;                       // **Put state machine in reset**
@@ -184,36 +205,143 @@ int main(void)
   BCSCTL2 |= DIVS_1;
   //UCB0CTL1 &= ~UCSWRST;                     // **Initialize USCI state machine**
   //IE2 |= UCB0RXIE;                          // Enable USCI0 RX interrupt
-  
+
   rocky_transaction_ended = 0;
   rocky_transaction_started = 0;
   sample_ready = 0;
   timeval = 0;
   phaseFlag = 0;
-  
+
   TransmitBuffer[0] = PREAMBLE; // Read one register from USER memory space
   TransmitBuffer[1] = FW_VER; // Address to read
   TransmitBuffer[2] = 0x13; //Dummy data
   TransmitBuffer[3] = 0x45;
   TransmitBuffer[4] = 0x55;
   TransmitBuffer[5] = 0x65;
-  
-  __bis_SR_register(GIE);       // enable interrupts
-  while(1){
+
+
+
+    __bis_SR_register(GIE);       // enable interrupts
+    while(1){
       if (sample_ready) {
-          sample_ready = 0;
-          int16_t sample = ADC10MEM;
-          P2OUT = BIT4;
-          
-          //Algorithm
-          
-          if (tx_skip++ == 100) {
-            tx_skip = 0;
-            updateRockyRegister(0x30,0x1234);
-          }
-          P2OUT &= ~BIT4;
+        sample_ready = 0;
+        int16_t sample = ADC10MEM;
+        P2OUT = BIT4;
+
+        //Algorithm
+
+
+
+     int max_th = division(max_val, 2);
+     int min_th = division(max_val, 4);
+     int temp = max_th - min_th;
+     int step = division(temp, numThresh);
+
+     while (phaseFlag == 2){
+        // if (sample_not_processed) {
+             //__bic_SR_register(GIE);
+        // }
+         while (!sample_ready);
+         sample_ready = 0;
+         data_in = ADC10MEM;
+        HeightLearning(data_in, min_th, step);
       }
-      
+
+     int height[numThresh] = {0};
+     int j;
+     diff(countPeak);
+
+     th = min_th;
+
+     for (i=1; i<(numThresh+1); i++) {
+       th += step;
+       if (r[i-1] < 10){
+         height[i-1] = th;
+       }
+     }
+
+     for (i= numThresh-1; i>=0; i--) {
+       if (r[i] == 0){
+         maxthresh = height[i];
+         for (j=i-1; j>=0;j--) {
+            if (r[j] != 0) {
+              minthresh = height[j];
+              break;
+            }
+         }
+         break;
+       }
+     }
+
+     thresh = division((maxthresh + minthresh),2);
+
+
+     /*
+     for (i=1; i<(numThresh+1); i++) {
+
+       th += step;
+
+       if (r[i-1] < 10){
+
+         height[i-1] = th;
+
+       }
+     }
+
+     for (i=0; i<numThresh; i++) {
+
+       if (r[i] == 0){
+         minthresh = height[i];
+         break;
+       }
+     }
+
+
+     for (i= numThresh-1; i>=0; i--) {
+
+       if (r[i] == 0){
+         maxthresh = height[i];
+         break;
+       }
+     }
+    // a = minthresh + maxthresh;
+     thresh = maxthresh; //division(a,2);
+    */
+
+     while (phaseFlag == 3){
+         //if (sample_not_processed) {
+             //__bic_SR_register(GIE);
+         //}
+         while (!sample_ready);
+         sample_ready = 0;
+         data_in = ADC10MEM;
+         NoiseLvlLearning(data_in);
+     }
+     //noiselvl = division(noiselvl, countInterval);
+     a=0;
+     //max_val = 0;
+     while (phaseFlag == 4) {
+         //if (sample_not_processed) {
+            // __bic_SR_register(GIE);
+         //}
+         while (!sample_ready);
+         sample_ready = 0;
+         data_in = ADC10MEM;
+         detection(data_in);
+     }
+
+     a=0;
+
+
+        // End Algorithm
+
+        if (tx_skip++ == 100) {
+          tx_skip = 0;
+          updateRockyRegister(0x30,0x1234);
+        }
+        P2OUT &= ~BIT4;
+      }
+
       if (rocky100_is_idle()) {
           P2OUT |= BIT4;
           mcu_lpm_enter(3);//LPM3 keeps ACLK running
@@ -290,4 +418,127 @@ void __attribute__ ((interrupt(USCIAB0RX_VECTOR))) USCI0RX_ISR (void)
        //while ()
        P2OUT |= BIT5; //deactivate CS
    }
+}
+
+
+
+
+
+//------------------------------------------------------------------------------
+// Interrupt Service Routines
+//------------------------------------------------------------------------------
+
+// Port 2 interrupt service routine
+// This is used to clear out stuff and reset everything.
+#if defined(__TI_COMPILER_VERSION__) || defined(__IAR_SYSTEMS_ICC__)
+#pragma vector=PORT1_VECTOR
+__interrupt void Port_1(void)
+#elif defined(__GNUC__)
+void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
+#else
+#error Compiler not supported!
+#endif
+{
+    // Clear interrupt flag
+    P1IFG &= ~BIT3;                           // P1.3 IFG cleared
+    P1OUT ^= BIT7;
+    // Trigger new measurement
+}
+
+
+//------------------------------------------------------------------------------
+// Subfunctions for node struct
+//------------------------------------------------------------------------------
+
+
+void HeightLearning(int curr, int min_th, int step) {
+
+  if ((curr < prev) && (prev > min_th) && (fall_flag == 0)) {
+
+    countPeak[0]++;
+    th = min_th;
+    fall_flag = 1;
+
+    for (i=1; i<(numThresh+1); i++) {
+      th += step;
+      if (prev > th) {
+        countPeak[i] ++;
+      }
+      else {
+        break;
+      }
+    }
+  }
+
+  if ((fall_flag == 1) && (curr > prev)){
+    fall_flag = 0;
+  }
+
+  prev = curr;
+}
+
+void NoiseLvlLearning(int data) {
+
+  if ((data < minthresh) && (data > noiselvl)) {
+    noiselvl = data;
+  }
+
+}
+
+void detection(int data) {
+
+    if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
+            if (idx < 5) {
+                startInd[idx] = timeval;
+            }
+            findPeak = 1;
+    }
+
+    else if ((data > thresh) && (findPeak == 1) && (findEnd == 0)) {
+
+        if (idx < 5) {
+            peakInd[idx] = timeval;
+        }
+        lastPI = timeval;
+        findEnd = 1;
+        findPeak = 0;
+    }
+
+    else if ((abs(data) < noiselvl) && (timeval > lastPI + 80) && (findEnd == 1) && (findPeak == 0)) {
+        if (idx < 5) {
+            endInd[idx] = timeval;
+        }
+        findEnd = 0;
+        idx++;
+    }
+
+}
+
+int division(int a, int b) {
+
+
+  int countD = 0;
+  int temp = a;
+
+  if (a == 0) {
+    return 0;
+  }
+  else if (b == 0) {
+    return -1;
+  }
+  else {
+    while (temp >= b) {
+      temp = temp - b;
+      countD++;
+    }
+    return countD;
+  }
+}
+
+
+void diff(int data[]){
+
+  for (i=0; i<(numThresh); i++) {
+    r[i] = data[i+1] - data[i];
+  }
 }
