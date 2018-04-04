@@ -120,6 +120,9 @@ void TimerA_UART_init(void);
 void TimerA_UART_tx(unsigned char byte);
 void TimerA_UART_print(char *string);
 
+char healthy[2] = {1,0}; // set initially to healthy, with history opposite
+
+char newdataflag = 0; // new data flag for SPI bus
 
 int max_val = 0; //max value of data learned
 
@@ -152,8 +155,6 @@ char i;
 
 int count = 0;
 
-int data_in;
-int a;
 volatile unsigned int timeval = 0;
 volatile uint8_t sample_ready;
 
@@ -226,131 +227,96 @@ int main(void)
       if (sample_ready) {
         sample_ready = 0;
         int16_t sample = ADC10MEM;
-        P2OUT = BIT4;
+        P2OUT = BIT4; // TOGGLE P2.4
+        timeval = 0;
+        noiselvl = 0;
 
-        //Algorithm
+        if (phaseFlag == 1){
+          if ((sample > max_val) && (sample > 0)) {
+            max_val = sample;
+          }
+        }
+        else if (phaseFlag == 2){
+          int max_th = division(max_val, 2);
+          int min_th = division(max_val, 4);
+          int temp = max_th - min_th;
+          int step = division(temp, numThresh);
 
+          HeightLearning(sample, min_th, step);
 
+            
+          int height[numThresh] = {0};
+          int j;
+          diff(countPeak);
 
-     int max_th = division(max_val, 2);
-     int min_th = division(max_val, 4);
-     int temp = max_th - min_th;
-     int step = division(temp, numThresh);
+          th = min_th;
 
-     while (phaseFlag == 2){
-        // if (sample_not_processed) {
-             //__bic_SR_register(GIE);
-        // }
-         while (!sample_ready);
-         sample_ready = 0;
-         data_in = ADC10MEM;
-        HeightLearning(data_in, min_th, step);
-      }
+          for (i=1; i<(numThresh+1); i++) {
+            th += step;
+            if (r[i-1] < 10){
+              height[i-1] = th;
+            }
+          }
 
-     int height[numThresh] = {0};
-     int j;
-     diff(countPeak);
-
-     th = min_th;
-
-     for (i=1; i<(numThresh+1); i++) {
-       th += step;
-       if (r[i-1] < 10){
-         height[i-1] = th;
-       }
-     }
-
-     for (i= numThresh-1; i>=0; i--) {
-       if (r[i] == 0){
-         maxthresh = height[i];
-         for (j=i-1; j>=0;j--) {
-            if (r[j] != 0) {
-              minthresh = height[j];
+          for (i= numThresh-1; i>=0; i--) {
+            if (r[i] == 0){
+              maxthresh = height[i];
+              for (j=i-1; j>=0;j--) {
+                if (r[j] != 0) {
+                  minthresh = height[j];
+                  break;
+                }
+              }
               break;
             }
-         }
-         break;
-       }
-     }
+          }
+          thresh = division((maxthresh + minthresh),2);
+        }
+        else if (phaseFlag == 3){
+          NoiseLvlLearning(sample);
+        }
+        else if (phaseFlag == 4) {
+          detection(sample);    
 
-     thresh = division((maxthresh + minthresh),2);
-
-
-     /*
-     for (i=1; i<(numThresh+1); i++) {
-
-       th += step;
-
-       if (r[i-1] < 10){
-
-         height[i-1] = th;
-
-       }
-     }
-
-     for (i=0; i<numThresh; i++) {
-
-       if (r[i] == 0){
-         minthresh = height[i];
-         break;
-       }
-     }
-
-
-     for (i= numThresh-1; i>=0; i--) {
-
-       if (r[i] == 0){
-         maxthresh = height[i];
-         break;
-       }
-     }
-    // a = minthresh + maxthresh;
-     thresh = maxthresh; //division(a,2);
-    */
-
-     while (phaseFlag == 3){
-         //if (sample_not_processed) {
-             //__bic_SR_register(GIE);
-         //}
-         while (!sample_ready);
-         sample_ready = 0;
-         data_in = ADC10MEM;
-         NoiseLvlLearning(data_in);
-     }
-     //noiselvl = division(noiselvl, countInterval);
-     a=0;
-     //max_val = 0;
-     while (phaseFlag == 4) {
-         //if (sample_not_processed) {
-            // __bic_SR_register(GIE);
-         //}
-         while (!sample_ready);
-         sample_ready = 0;
-         data_in = ADC10MEM;
-         detection(data_in);
-     }
-
-     a=0;
+          if (timeval > lastPi + 400) {
+            // Over 400ms since the last peak.
+            if (healthy[0]) {
+              newdataflag = 1;
+              healthy[1] = healthy[0];
+              healthy[0] = 0;
+            }
+          } else {
+            if (!healthy[0]) {
+              newdataflag = 1; 
+              healthy[1] = healthy[0];
+              healthy[0] = 1;
+            }
+          }
+        } 
+        else { // Some error shifted the phaseFlag incorrectly.
+          break;
+        }
 
 
-        // End Algorithm
 
-        if (tx_skip++ == 100) {
-          tx_skip = 0;
-          updateRockyRegister(0x30,0x1234);
+
+          // End Algorithm
+
+        if (newdataflag) { // update Rocky Register if the new data flag is activated
+          updateRockyRegister(0x30,healthy[0]);
         }
         P2OUT &= ~BIT4;
       }
 
-      if (rocky100_is_idle()) {
-          P2OUT |= BIT4;
-          mcu_lpm_enter(3);//LPM3 keeps ACLK running
+      if (rocky100_is_idle()) { // this is a bit comfusing. Don't worry about it
+        P2OUT |= BIT4;
+        mcu_lpm_enter(3);//LPM3 keeps ACLK running
       }
       else
       {
-          P2OUT &= ~BIT4;
-          mcu_lpm_enter(0);
-      }
+        P2OUT &= ~BIT4; // TOGGLE P2.4
+        mcu_lpm_enter(0);
+    }
   }
 }
 
@@ -374,10 +340,8 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
        phaseFlag = 2;
    } else if (timeval == 10000){
      phaseFlag = 3;
-   } else if (timeval == 20000) {
+   } else {
        phaseFlag = 4;
-   } else if (timeval == 30000) {
-       phaseFlag = 0;
    }
   timeval++;
 }
@@ -487,6 +451,7 @@ void NoiseLvlLearning(int data) {
 
 void detection(int data) {
 
+    // Find the beginning of a peak
     if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
             if (idx < 5) {
                 startInd[idx] = timeval;
@@ -494,6 +459,7 @@ void detection(int data) {
             findPeak = 1;
     }
 
+    // Find the peak
     else if ((data > thresh) && (findPeak == 1) && (findEnd == 0)) {
 
         if (idx < 5) {
@@ -504,13 +470,19 @@ void detection(int data) {
         findPeak = 0;
     }
 
+    // Find the end of a peak
     else if ((abs(data) < noiselvl) && (timeval > lastPI + 80) && (findEnd == 1) && (findPeak == 0)) {
         if (idx < 5) {
             endInd[idx] = timeval;
         }
         findEnd = 0;
         idx++;
+    } else {
+      // No peak detected
+      return false;
     }
+
+    return true;
 
 }
 
