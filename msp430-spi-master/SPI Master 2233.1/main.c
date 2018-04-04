@@ -251,6 +251,8 @@ int main(void)
 
           th = min_th;
 
+
+
           for (i=1; i<(numThresh+1); i++) {
             th += step;
             if (r[i-1] < 10){
