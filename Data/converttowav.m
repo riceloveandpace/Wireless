@@ -1,6 +1,15 @@
 %% Write WAVE file in the current folder
 load SinusRhythmIntracardiacCS_struct.mat
+vent_labels = load('detect_ep1SR_ventall_Ch17.mat', '-ASCII');
+atrial_labels = load('detect_ep1SR_atrialall_Ch15.mat','-ASCII');
+avlabels = [atrial_labels(:,1),vent_labels(:,1)];
+avbinary = zeros(60000, 2);
+avbinary(avlabels(:,1),1) = 1;
+convatrial = conv(avbinary(:,1),[1,1,1,1,1]);
+avbinary(avlabels(:,2),2) = 1;
+convvent = conv(avbinary(:,2),[1,1,1,1,1]);
 
+avbinary = [convatrial(1:60000,:),convvent(1:60000,:)];
 
 % filename = 'SinusRhythmIntracardiacCS_struct.wav';
 % waveform = data(:,1);
@@ -13,14 +22,17 @@ load SinusRhythmIntracardiacCS_struct.mat
 % 
 % sound(y,Fs);
 
-%% Save whole data set as a CSV
+%% Clip and add binary data
 
 [~,y] = size(data);
 if (y > 16) 
-    y = 8;
+    y = 6;
 end
 
-mymat = data(:,1:y);
+mymat = [data(:,1:y), avbinary];
+
+
+%% Save whole data set as a CSV
 csvfilename = 'SinusRhythmIntracardiacCS_struct.csv'
 csvwrite(csvfilename, mymat);
 

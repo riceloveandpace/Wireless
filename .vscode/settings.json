@@ -1,6 +1,11 @@
 {
    "files.associations": {
       "xstring": "c",
-      "xutility": "c"
+      "xutility": "c",
+      "initializer_list": "c",
+      "streambuf": "c",
+      "xmemory0": "c",
+      "ios": "c",
+      "xiosbase": "c"
    }
 }
