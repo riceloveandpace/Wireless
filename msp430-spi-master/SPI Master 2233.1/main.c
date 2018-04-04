@@ -296,10 +296,6 @@ int main(void)
         else { // Some error shifted the phaseFlag incorrectly.
           break;
         }
-
-
-
-
           // End Algorithm
 
         if (newdataflag) { // update Rocky Register if the new data flag is activated
