@@ -287,6 +287,10 @@ int main(void)
               newdataflag = 1; 
               healthy[1] = healthy[0];
               healthy[0] = 1;
+
+              // Temporary Pacing Decision
+              P2OUT ^= BIT2;
+
             }
           }
         } 
