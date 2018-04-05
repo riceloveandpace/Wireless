@@ -101,8 +101,6 @@ void updateRockyRegister(uint8_t reg, uint16_t value) {
 
 }
 
-volatile uint8_t sample_ready;
-volatile unsigned int timeval;
 volatile char phaseFlag = 1;
 
 
@@ -115,9 +113,11 @@ void TimerA_UART_init(void);
 void TimerA_UART_tx(unsigned char byte);
 void TimerA_UART_print(char *string);
 
-char healthy[2] = {1,0}; // set initially to healthy, with history opposite
+char healthy = 1; // set initially to healthy
 
 char newdataflag = 0; // new data flag for SPI bus
+
+int detection_output; // output of the detection algorithm
 
 int max_val = 0; //max value of data learned
 
@@ -150,7 +150,7 @@ char i;
 
 int count = 0;
 
-volatile unsigned int timeval = 0;
+volatile unsigned int timeval;
 volatile uint8_t sample_ready;
 
 unsigned int peakInd[5] = {0};
@@ -184,7 +184,7 @@ int main(void)
   ADC10AE0 |= BIT4;                         // PA.4 ADC option select
 
   P2DIR |= BIT5; //CS
-  P2DIR |= BIT4;
+  P2DIR |= BIT4 + BIT2;
   P2SEL &= ~(BIT5);
   P2SEL2 &= ~(BIT5);
   P2OUT |= BIT5;
@@ -206,7 +206,6 @@ int main(void)
   rocky_transaction_started = 0;
   sample_ready = 0;
   timeval = 0;
-  phaseFlag = 0;
 
   TransmitBuffer[0] = PREAMBLE; // Read one register from USER memory space
   TransmitBuffer[1] = FW_VER; // Address to read
@@ -218,13 +217,16 @@ int main(void)
 
 
     __bis_SR_register(GIE);       // enable interrupts
+
+     timeval = 0;
+     noiselvl = 0;
+
     while(1){
       if (sample_ready) {
         sample_ready = 0;
         int16_t sample = ADC10MEM;
+        sample = abs(sample);
         P2OUT = BIT4; // TOGGLE P2.4
-        timeval = 0;
-        noiselvl = 0;
 
         if (phaseFlag == 1){
           if ((sample > max_val) && (sample > 0)) {
@@ -239,7 +241,7 @@ int main(void)
 
           HeightLearning(sample, min_th, step);
 
-            
+
           int height[numThresh] = {0};
           int j;
           diff(countPeak);
@@ -273,34 +275,31 @@ int main(void)
           NoiseLvlLearning(sample);
         }
         else if (phaseFlag == 4) {
-          detection(sample);    
+          detection_output = detection(sample);
 
           if (timeval > lastPI + 400) {
             // Over 400ms since the last peak.
-            if (healthy[0]) {
+              P2OUT &= ~BIT2;
+            if (healthy) {
               newdataflag = 1;
-              healthy[1] = healthy[0];
-              healthy[0] = 0;
             }
+            healthy = 0;
           } else {
-            if (!healthy[0]) {
-              newdataflag = 1; 
-              healthy[1] = healthy[0];
-              healthy[0] = 1;
-
+              P2OUT |= BIT2;
+              if(!healthy) {
+              newdataflag = 1;
               // Temporary Pacing Decision
-              P2OUT ^= BIT2;
-
             }
+            healthy = 1;
           }
-        } 
-        else { // Some error shifted the phaseFlag incorrectly.
+        } else { // Some error shifted the phaseFlag incorrectly.
           break;
         }
           // End Algorithm
 
         if (newdataflag) { // update Rocky Register if the new data flag is activated
-          updateRockyRegister(0x30,healthy[0]);
+          newdataflag = 0;
+          updateRockyRegister(0x30,healthy);
         }
         P2OUT &= ~BIT4;
       }
@@ -337,8 +336,10 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
        phaseFlag = 2;
    } else if (timeval == 10000){
      phaseFlag = 3;
-   } else {
+   } else if (timeval > 20000){
        phaseFlag = 4;
+   } else if (timeval > 60000){
+       timeval = 20000;
    }
   timeval++;
 }
@@ -439,7 +440,6 @@ void HeightLearning(int curr, int min_th, int step) {
 }
 
 void NoiseLvlLearning(int data) {
-
   if ((data < minthresh) && (data > noiselvl)) {
     noiselvl = data;
   }
@@ -447,7 +447,7 @@ void NoiseLvlLearning(int data) {
 }
 
 int detection(int data) {
-
+  data = abs(data);
     // Find the beginning of a peak
     if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
             if (idx < 5) {
