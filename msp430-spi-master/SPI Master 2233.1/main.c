@@ -119,6 +119,10 @@ char newdataflag = 0; // new data flag for SPI bus
 
 int detection_output; // output of the detection algorithm
 
+char trainingflag;
+
+int flip = 0;
+
 int max_val = 0; //max value of data learned
 
 int thresh = 0;  //threshold learned
@@ -187,7 +191,7 @@ int main(void)
   P2DIR |= BIT4 + BIT2;
   P2SEL &= ~(BIT5);
   P2SEL2 &= ~(BIT5);
-  P2OUT |= BIT5;
+  P2OUT |= BIT5 + BIT2;
 
   TACCTL0 = CCIE;                             // CCR0 interrupt enabled
   TACCR0 = 32;
@@ -225,12 +229,17 @@ int main(void)
       if (sample_ready) {
         sample_ready = 0;
         int16_t sample = ADC10MEM;
-        sample = abs(sample);
-        P2OUT = BIT4; // TOGGLE P2.4
+        if (flip) {
+          sample = -sample;
+        }
 
         if (phaseFlag == 1){
-          if ((sample > max_val) && (sample > 0)) {
+          if ((abs(sample) > abs(max_val)) && (abs(sample) > 0)) {
             max_val = sample;
+            if (max_val < 0) { 
+              flip = 1;
+              max_val = abs(max_val);
+            }
           }
         }
         else if (phaseFlag == 2){
@@ -277,23 +286,24 @@ int main(void)
         else if (phaseFlag == 4) {
           detection_output = detection(sample);
 
-          if (timeval > lastPI + 400) {
+          if (timeval > lastPI + 600) {
             // Over 400ms since the last peak.
-              P2OUT &= ~BIT2;
-            if (healthy) {
-              newdataflag = 1;
-            }
-            healthy = 0;
-          } else {
-              P2OUT |= BIT2;
-              if(!healthy) {
+            P2OUT |= BIT2;
+            if(!healthy) {
               newdataflag = 1;
               // Temporary Pacing Decision
             }
             healthy = 1;
+          } else {
+            P2OUT &= ~BIT2;
+            if (healthy) {
+              newdataflag = 1;
+            }
+          healthy = 0;
           }
         } else { // Some error shifted the phaseFlag incorrectly.
           break;
+          //error!!
         }
           // End Algorithm
 
@@ -330,17 +340,18 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
   //P1IFG &= ~BIT3;                           // P1.3 IFG cleared
   //P2OUT ^= 0xFF;
   ADC10CTL0 |= ENC + ADC10SC;             // Sampling and conversion start
-  if (timeval == 0){
-     phaseFlag = 1;
-   } else if (timeval == 5000){
-       phaseFlag = 2;
-   } else if (timeval == 10000){
-     phaseFlag = 3;
-   } else if (timeval > 20000){
-       phaseFlag = 4;
-   } else if (timeval > 60000){
-       timeval = 20000;
-   }
+  if (trainingflag) {
+    if (timeval == 0){
+      phaseFlag = 1;
+    } else if (timeval == 5000){
+      phaseFlag = 2;
+    } else if (timeval == 10000){
+      phaseFlag = 3;
+      trainingflag = 0;
+    }
+  } else {
+    phaseFlag = 4;
+  }
   timeval++;
 }
 
@@ -447,7 +458,6 @@ void NoiseLvlLearning(int data) {
 }
 
 int detection(int data) {
-  data = abs(data);
     // Find the beginning of a peak
     if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
             if (idx < 5) {
@@ -511,3 +521,4 @@ void diff(int data[]){
     r[i] = data[i+1] - data[i];
   }
 }
+
