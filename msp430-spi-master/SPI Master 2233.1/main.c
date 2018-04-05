@@ -6,6 +6,8 @@
 
 #define PREAMBLE    0xAA
 #define FW_VER      0x02
+#define TRUE        1
+#define FALSE       0
 
 #define MAX_BUFFER_SIZE     10
 
@@ -16,13 +18,6 @@ unsigned char rxBuffer;                     // Received UART character
 //------------------------------------------------------------------------------
 // Custom Defined Bits
 //------------------------------------------------------------------------------
-#define MOSI_BIT    BIT2                                // P1
-#define MISO_BIT    BIT1                                // P1
-#define CS_BIT      BIT5
-#define SCL_BIT     BIT4
-
-#define ADC_BIT     BIT3
-
 #define MOSI_BIT  BIT2 // P1
 #define MISO_BIT  BIT1 // P1
 #define CS_BIT    BIT5 // P1
@@ -167,7 +162,7 @@ char idx = 0;
 void HeightLearning(int curr, int min_th, int step);
 void NoiseLvlLearning(int data);
 
-void detection(int data);
+int detection(int data);
 
 void diff(int data[]);
 int division(int a, int b);
@@ -280,7 +275,7 @@ int main(void)
         else if (phaseFlag == 4) {
           detection(sample);    
 
-          if (timeval > lastPi + 400) {
+          if (timeval > lastPI + 400) {
             // Over 400ms since the last peak.
             if (healthy[0]) {
               newdataflag = 1;
@@ -447,7 +442,7 @@ void NoiseLvlLearning(int data) {
 
 }
 
-void detection(int data) {
+int detection(int data) {
 
     // Find the beginning of a peak
     if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
@@ -477,10 +472,10 @@ void detection(int data) {
         idx++;
     } else {
       // No peak detected
-      return false;
+      return FALSE;
     }
 
-    return true;
+    return TRUE;
 
 }
 
