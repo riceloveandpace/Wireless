@@ -288,14 +288,14 @@ int main(void)
 
           if (timeval > lastPI + 600) {
             // Over 400ms since the last peak.
-            P2OUT |= BIT2;
+            // P2OUT |= BIT2;
             if(!healthy) {
               newdataflag = 1;
               // Temporary Pacing Decision
             }
             healthy = 1;
           } else {
-            P2OUT &= ~BIT2;
+            // P2OUT &= ~BIT2;
             if (healthy) {
               newdataflag = 1;
             }
@@ -475,6 +475,7 @@ int detection(int data) {
         lastPI = timeval;
         findEnd = 1;
         findPeak = 0;
+        P2OUT ^= BIT2;
     }
 
     // Find the end of a peak
