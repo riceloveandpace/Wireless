@@ -8,8 +8,21 @@ avbinary(avlabels(:,1),1) = 1;
 convatrial = conv(avbinary(:,1),[1,1,1,1,1]);
 avbinary(avlabels(:,2),2) = 1;
 convvent = conv(avbinary(:,2),[1,1,1,1,1]);
-
 avbinary = [convatrial(1:60000,:),convvent(1:60000,:)];
+
+
+%% Creating Fixed time delay for June
+
+% atrial_labels = [1:1000:60000]';
+% vent_labels = [1:1000:60000]';
+% avlabels = [atrial_labels,vent_labels];
+% avbinary = zeros(60000, 2);
+% avbinary(avlabels(:,1),1) = 1;
+% convatrial = conv(avbinary(:,1),[1,1,1,1,1]);
+% avbinary(avlabels(:,2),2) = 1;
+% convvent = conv(avbinary(:,2),[1,1,1,1,1]);
+% avbinary = 5*[convatrial(1:60000,:),convvent(1:60000,:)];
+
 
 % filename = 'SinusRhythmIntracardiacCS_struct.wav';
 % waveform = data(:,1);
