@@ -38,10 +38,11 @@ avbinary = [convatrial(1:60000,:),convvent(1:60000,:)];
 %% Clip and add binary data
 
 [~,y] = size(data);
-if (y > 16) 
+if (y > 6) 
     y = 6;
 end
 
+data = data(:,14:19); % Used to grab channels 13-18.
 mymat = [data(:,1:y), avbinary];
 
 
