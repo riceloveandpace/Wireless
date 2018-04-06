@@ -121,8 +121,6 @@ int detection_output; // output of the detection algorithm
 
 char trainingflag = 1;
 
-int flip = 0;
-
 int max_val = 0; //max value of data learned
 
 int thresh = 0;  //threshold learned
@@ -229,17 +227,10 @@ int main(void)
       if (sample_ready) {
         sample_ready = 0;
         int16_t sample = ADC10MEM;
-        if (flip) {
-          sample = -sample;
-        }
 
         if (phaseFlag == 1){
           if ((abs(sample) > abs(max_val)) && (abs(sample) > 0)) {
             max_val = sample;
-            if (max_val < 0) { 
-              flip = 1;
-              max_val = abs(max_val);
-            }
           }
         }
         else if (phaseFlag == 2){
@@ -347,6 +338,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
       phaseFlag = 2;
     } else if (timeval == 10000){
       phaseFlag = 3;
+    } else if (timeval == 20000){
       trainingflag = 0;
     }
   } else {
