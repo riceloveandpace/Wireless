@@ -1,5 +1,6 @@
 %% Write WAVE file in the current folder
-load SinusRhythmIntracardiacCS_struct.mat
+data = load('ep1SR.mat');
+data = data.PATIENT1SINUSRHYTHMNUMBERSONLY;
 vent_labels = load('detect_ep1SR_ventall_Ch17.mat', '-ASCII');
 atrial_labels = load('detect_ep1SR_atrialall_Ch15.mat','-ASCII');
 avlabels = [atrial_labels(:,1),vent_labels(:,1)];
@@ -42,7 +43,7 @@ if (y > 6)
     y = 6;
 end
 
-data = data(:,14:19); % Used to grab channels 13-18.
+data = data(:,13:18); % Used to grab channels 13-18.
 mymat = [data(:,1:y), avbinary];
 
 
