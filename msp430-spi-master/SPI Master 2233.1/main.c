@@ -119,7 +119,7 @@ char newdataflag = 0; // new data flag for SPI bus
 
 int detection_output; // output of the detection algorithm
 
-char trainingflag;
+char trainingflag = 1;
 
 int flip = 0;
 
@@ -455,7 +455,7 @@ void NoiseLvlLearning(int data) {
     noiselvl = data;
   }
 
-}
+} 
 
 int detection(int data) {
     // Find the beginning of a peak
