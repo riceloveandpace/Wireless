@@ -164,7 +164,7 @@ char idx = 0;
 void HeightLearning(int curr, int min_th, int step);
 void NoiseLvlLearning(int data);
 
-int detection(int data);
+void detection(int data);
 
 void diff(int data[]);
 int division(int a, int b);
@@ -223,55 +223,55 @@ int main(void)
      timeval = 0;
      noiselvl = 0;
 
+    int phaseflag2flag = 1;
+    int phaseflag3flag = 1;
     while(1){
       if (sample_ready) {
         sample_ready = 0;
         int16_t sample = ADC10MEM;
 
         if (phaseFlag == 1){
-          if ((abs(sample) > abs(max_val)) && (abs(sample) > 0)) {
+          if ((sample > max_val) && (sample > 0)) {
             max_val = sample;
           }
         }
         else if (phaseFlag == 2){
-          int max_th = division(max_val, 2);
-          int min_th = division(max_val, 4);
-          int temp = max_th - min_th;
-          int step = division(temp, numThresh);
-
+          if (phaseflag2flag) {
+            int max_th = division(max_val, 2);
+            int min_th = division(max_val, 4);
+            int temp = max_th - min_th;
+            int step = division(temp, numThresh);
+            phaseflag2flag = 0; // no longer calculate these things.
+          }
           HeightLearning(sample, min_th, step);
-
-
-          int height[numThresh] = {0};
-          int j;
-          diff(countPeak);
-
-          th = min_th;
-
-
-
-          for (i=1; i<(numThresh+1); i++) {
-            th += step;
-            if (r[i-1] < 10){
-              height[i-1] = th;
-            }
-          }
-
-          for (i= numThresh-1; i>=0; i--) {
-            if (r[i] == 0){
-              maxthresh = height[i];
-              for (j=i-1; j>=0;j--) {
-                if (r[j] != 0) {
-                  minthresh = height[j];
-                  break;
-                }
-              }
-              break;
-            }
-          }
-          thresh = division((maxthresh + minthresh),2);
         }
         else if (phaseFlag == 3){
+          if (phaseflag3flag) {
+            int height[numThresh] = {0};
+            int j;
+            diff(countPeak);
+            th = min_th;
+            for (i=1; i<(numThresh+1); i++) {
+              th += step;
+              if (r[i-1] < 10){
+                height[i-1] = th;
+              }
+            }
+
+            for (i= numThresh-1; i>=0; i--) {
+              if (r[i] == 0){
+                maxthresh = height[i];
+                for (j=i-1; j>=0;j--) {
+                  if (r[j] != 0) {
+                    minthresh = height[j];
+                    break;
+                  }
+                }
+                break;
+              }
+            }
+            thresh = division((maxthresh + minthresh),2);
+          }
           NoiseLvlLearning(sample);
         }
         else if (phaseFlag == 4) {
@@ -343,6 +343,12 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
     }
   } else {
     phaseFlag = 4;
+      if (timeval > 60000) {
+          timeval = 0;
+          lastPI = 0;
+          findPeak = 0;
+          findEnd = 0;
+      }
   }
   timeval++;
 }
@@ -447,9 +453,9 @@ void NoiseLvlLearning(int data) {
     noiselvl = data;
   }
 
-} 
+}
 
-int detection(int data) {
+void detection(int data) {
     // Find the beginning of a peak
     if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
             if (idx < 5) {
@@ -477,13 +483,7 @@ int detection(int data) {
         }
         findEnd = 0;
         idx++;
-    } else {
-      // No peak detected
-      return FALSE;
     }
-
-    return TRUE;
-
 }
 
 int division(int a, int b) {
