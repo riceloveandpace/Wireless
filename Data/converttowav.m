@@ -9,7 +9,7 @@ avbinary(avlabels(:,1),1) = 1;
 convatrial = conv(avbinary(:,1),[1,1,1,1,1]);
 avbinary(avlabels(:,2),2) = 1;
 convvent = conv(avbinary(:,2),[1,1,1,1,1]);
-avbinary = 2*[convatrial(1:60000,:),convvent(1:60000,:)];
+avbinary = 5*[convatrial(1:60000,:),convvent(1:60000,:)];
 
 
 %% Creating Fixed time delay for June
