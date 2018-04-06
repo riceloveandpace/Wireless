@@ -127,6 +127,8 @@ int thresh = 0;  //threshold learned
 
 int noiselvl = 0; //noise level learned
 
+int noiseHistory[20] = {0};
+
 unsigned int lastPI = 0; //last peak index detected
 
 char fall_flag = 0;
@@ -163,6 +165,8 @@ char idx = 0;
 
 void HeightLearning(int curr, int min_th, int step);
 void NoiseLvlLearning(int data);
+
+char updateBufferIdx(char size, char head);
 
 void detection(int data);
 
@@ -225,6 +229,13 @@ int main(void)
 
     int phaseflag2flag = 1;
     int phaseflag3flag = 1;
+    int max_th;
+    int min_th;
+    int temp;
+    int step;
+    int height[numThresh] = {0};
+    int j;
+    
     while(1){
       if (sample_ready) {
         sample_ready = 0;
@@ -237,18 +248,16 @@ int main(void)
         }
         else if (phaseFlag == 2){
           if (phaseflag2flag) {
-            int max_th = division(max_val, 2);
-            int min_th = division(max_val, 4);
-            int temp = max_th - min_th;
-            int step = division(temp, numThresh);
+            max_th = division(max_val, 2);
+            min_th = division(max_val, 4);
+            temp = max_th - min_th;
+            step = division(temp, numThresh);
             phaseflag2flag = 0; // no longer calculate these things.
           }
           HeightLearning(sample, min_th, step);
         }
         else if (phaseFlag == 3){
           if (phaseflag3flag) {
-            int height[numThresh] = {0};
-            int j;
             diff(countPeak);
             th = min_th;
             for (i=1; i<(numThresh+1); i++) {
@@ -271,26 +280,28 @@ int main(void)
               }
             }
             thresh = division((maxthresh + minthresh),2);
+            phaseflag3flag = 0;
           }
           NoiseLvlLearning(sample);
         }
         else if (phaseFlag == 4) {
-          detection_output = detection(sample);
+          detection(sample);
 
           if (timeval > lastPI + 600) {
-            // Over 400ms since the last peak.
+            // Over 400ms since the last peak
+            // UNHEALTHY
+            // P2OUT &= ~BIT2;
+            if (healthy) {
+              newdataflag = 1;
+            }
+          healthy = 0;
+          } else {
             // P2OUT |= BIT2;
             if(!healthy) {
               newdataflag = 1;
               // Temporary Pacing Decision
             }
             healthy = 1;
-          } else {
-            // P2OUT &= ~BIT2;
-            if (healthy) {
-              newdataflag = 1;
-            }
-          healthy = 0;
           }
         } else { // Some error shifted the phaseFlag incorrectly.
           break;
@@ -452,6 +463,8 @@ void NoiseLvlLearning(int data) {
   if ((data < minthresh) && (data > noiselvl)) {
     noiselvl = data;
   }
+  
+
 
 }
 
@@ -471,9 +484,9 @@ void detection(int data) {
             peakInd[idx] = timeval;
         }
         lastPI = timeval;
+        P2OUT ^= BIT2;
         findEnd = 1;
         findPeak = 0;
-        P2OUT ^= BIT2;
     }
 
     // Find the end of a peak
@@ -515,3 +528,13 @@ void diff(int data[]){
   }
 }
 
+char updateBufferIdx(char size, char head) {
+   // manipulates buffer by updating head value
+   // then adding in new value for buffer head
+   head++;
+   if (head >= size) {
+      // wrap the head pointer around array
+      head = head - size;
+   }
+   return head;
+}
