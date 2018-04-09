@@ -102,7 +102,7 @@ void updateRockyRegister(uint8_t reg, uint16_t value) {
 
 }
 
-volatile char phaseFlag = 1;
+volatile char phaseFlag = 0;
 
 
 
@@ -122,6 +122,8 @@ int avgHistory[18] = {0};
 
 char avgBufferIdx = 0;
 
+int sample_average;
+
 char healthy = 1; // set initially to healthy
 
 char newdataflag = 0; // new data flag for SPI bus
@@ -130,7 +132,7 @@ int detection_output; // output of the detection algorithm
 
 char trainingflag = 1;
 
-int max_val = 0; //max value of data learned
+int max_deviation = 0; //max value of data learned
 
 int thresh = 0;  //threshold learned
 
@@ -164,6 +166,7 @@ char i;
 int count = 0;
 
 volatile unsigned int timeval;
+volatile unsigned int subtimeval;
 volatile uint8_t sample_ready;
 
 unsigned int peakInd[5] = {0};
@@ -171,15 +174,23 @@ unsigned int startInd[5] = {0};
 unsigned int endInd[5] = {0};
 char idx = 0;
 
+int max_th;
+int min_th;
+int temp;
+int step;
+int height[numThresh] = {0};
+
 
 void HeightLearning(int curr, int min_th, int step);
 void NoiseLvlLearning(int data);
-
-char updateBufferIdx(char size, char head);
-
 void detection(int data);
-
-void diff(int data[]);
+char updateBufferIdx(char size, char head);
+void swap(int* a, int* b);
+int partition (int arr[], int low, int high);
+void quickSort(int arr[], int low, int high);
+int computeAverage(void);
+void maxThreshMinThreshLearning(void);
+void calcMaxAndMinThreshold(void);
 
 volatile int sample_not_processed;
 
@@ -194,8 +205,8 @@ int main(void)
 
   ADC10CTL0 = ADC10SR + ADC10ON + ADC10IE; // + ADC10SHT_1 // ADC10ON, interrupt enabled, 8 conversion clocks (13+8=21 clocks total)
 
-  ADC10CTL1 = INCH_4 + ADC10DF;//+ ADC10SSEL_1;   //                     // input A4, no clock divider; 2's complement out; ACLK select; single channel-single conversion
-  ADC10AE0 |= BIT4;                         // PA.4 ADC option select
+  ADC10CTL1 = INCH_0 + ADC10DF;//+ ADC10SSEL_1;   //                     // input A4, no clock divider; 2's complement out; ACLK select; single channel-single conversion
+  ADC10AE0 |= BIT0;                         // PA.4 ADC option select
 
   P2DIR |= BIT5; //CS
   P2DIR |= BIT4 + BIT2;
@@ -237,65 +248,64 @@ int main(void)
 
     int phaseflag2flag = 1;
     int phaseflag3flag = 1;
-    int max_th;
-    int min_th;
-    int temp;
-    int step;
-    int height[numThresh] = {0};
-    int j;
-    
+    int phaseflag1flag = 1;
+
+
     while(1){
       if (sample_ready) {
         sample_ready = 0;
-        int16_t sample = ADC10MEM;  
-        histBuffer[histBufferIdx] = sample; // update the history buffer
+        int16_t sample = ADC10MEM;
+        hist[histBufferIdx] = sample; // update the history buffer
         histBufferIdx = updateBufferIdx(numHist, histBufferIdx);
+
 
         // PHASE 0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         if (phaseFlag == 0) {
-          // calculate the average value
-          currentAvg = 0;
-          for (i=0; i < numHist; i++) {
-            currentAvg += histBuffer[i];
+          if (subtimeval == 16) {
+            subtimeval = 0;
+            // calculate the average value
+            int currentAvg = 0;
+            for (i=0; i < numHist; i++) {
+              currentAvg += hist[i];
+            }
+            currentAvg = currentAvg >> 4; // divide by 16.
+            avgHistory[avgBufferIdx] = currentAvg;
+            avgBufferIdx = updateBufferIdx(18, avgBufferIdx);
           }
-          currentAvg = currentAvg >> 4; // divide by 16.
-          avgHistory[currentAvgIdx] = currentAvg;
         }
         // PHASE 1 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        if (phaseFlag == 1){
-          // compute the average 
+        else if (phaseFlag == 1){
+          // compute the average
           // first, compute the average from the history data:
-          sample_average = computeAverage();
-           // get the absolute max value of the sample. 
+            if (phaseflag1flag) {
+                sample_average = computeAverage();
+                phaseflag1flag = 0;
+            }
+           // get the absolute max value of the sample.
           if ((abs(sample - sample_average) > max_deviation)) {
             max_deviation = abs(sample - sample_average);
           }
         }
         // PHASE 2 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         else if (phaseFlag == 2){
+          sample = sample - sample_average;
           if (phaseflag2flag) {
-            max_th = ((max_val - sample_average) >> 1) + sample_average; // divide by two
-            // max_th = division(max_val, 2);
-            min_th = ((max_val - sample_average) >> 2) + sample_average; // divide by 4;
-            // min_th = division(max_val, 4);
-            temp = max_th - min_th;
-            step = temp >> 6; // divde by 32
-            // step = division(temp, numThresh);
+            calcMaxAndMinThreshold();
             phaseflag2flag = 0; // no longer calculate these things.
           }
           HeightLearning(sample, min_th, step);
         }
         // PHASE 3 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         else if (phaseFlag == 3){
-
+          sample = sample - sample_average;
           if (phaseflag3flag) {
             maxThreshMinThreshLearning();
             phaseflag3flag = 0;
           }
-          if timeval % 10 
           NoiseLvlLearning(sample);
         }
         else if (phaseFlag == 4) {
+          sample = sample - sample_average;
           detection(sample);
 
           if (timeval > lastPI + 600) {
@@ -314,16 +324,17 @@ int main(void)
             }
             healthy = 1;
           }
+          if (newdataflag) { // update Rocky Register if the new data flag is activated
+            newdataflag = 0;
+            updateRockyRegister(0x30,healthy);
+          }
         } else { // Some error shifted the phaseFlag incorrectly.
           break;
           //error!!
         }
           // End Algorithm
 
-        if (newdataflag) { // update Rocky Register if the new data flag is activated
-          newdataflag = 0;
-          updateRockyRegister(0x30,healthy);
-        }
+
         P2OUT &= ~BIT4;
       }
 
@@ -354,7 +365,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
   //P2OUT ^= 0xFF;
   ADC10CTL0 |= ENC + ADC10SC;             // Sampling and conversion start
   if (trainingflag) {
-    if (timeval == 16) {
+    if (timeval == 0) {
       // wait till 16 so that histBuffer is filled
       phaseFlag = 0;
     } else if (timeval == 2500){
@@ -376,6 +387,7 @@ void __attribute__ ((interrupt(TIMER0_A0_VECTOR))) Timer_A (void)
       }
   }
   timeval++;
+  subtimeval++;
 }
 
 // ADC10 interrupt service routine
@@ -446,90 +458,34 @@ void __attribute__ ((interrupt(PORT1_VECTOR))) Port_1 (void)
 // Subfunctions for node struct
 //------------------------------------------------------------------------------
 
+// void HeightLearning(int curr, int min_th, int step) {
 
-void HeightLearning(int curr, int min_th, int step) {
+//   if ((curr < prev) && (prev > min_th) && (fall_flag == 0)) {
 
-  if ((curr < prev) && (prev > min_th) && (fall_flag == 0)) {
+//     countPeak[0]++;
+//     th = min_th;
+//     fall_flag = 1;
+//     // increases the threshold by steps
+//     // the countPeak vector has the number of peaks
+//     // found at each step over the time HeightLearning is run
+//     for (i=1; i<(numThresh+1); i++) {
+//       th += step;
+//       if (prev > th) {
+//         countPeak[i] ++;
+//       }
+//       else {
+//         break;
+//       }
+//     }
+//   }
 
-    countPeak[0]++;
-    th = min_th;
-    fall_flag = 1;
-    // increases the threshold by steps
-    // the countPeak vector has the number of peaks
-    // found at each step over the time HeightLearning is run
-    for (i=1; i<(numThresh+1); i++) {
-      th += step;
-      if (prev > th) {
-        countPeak[i] ++;
-      }
-      else {
-        break;
-      }
-    }
-  }
+//   if ((fall_flag == 1) && (curr > prev)){
+//     fall_flag = 0;
+//   }
 
-  if ((fall_flag == 1) && (curr > prev)){
-    fall_flag = 0;
-  }
+//   prev = curr;
+// }
 
-  prev = curr;
-}
-
-void NoiseLvlLearning(int data) {
-  if ((data < minthresh) && (data > noiselvl)) {
-    noiselvl = data;
-  }
-}
-
-void detection(int data) {
-    // Find the beginning of a peak
-    if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
-            if (idx < 5) {
-                startInd[idx] = timeval;
-            }
-            findPeak = 1;
-    }
-
-    // Find the peak
-    else if ((data > thresh) && (findPeak == 1) && (findEnd == 0)) {
-
-        if (idx < 5) {
-            peakInd[idx] = timeval;
-        }
-        lastPI = timeval;
-        P2OUT ^= BIT2;
-        findEnd = 1;
-        findPeak = 0;
-    }
-
-    // Find the end of a peak
-    else if ((abs(data) < noiselvl) && (timeval > lastPI + 80) && (findEnd == 1) && (findPeak == 0)) {
-        if (idx < 5) {
-            endInd[idx] = timeval;
-        }
-        findEnd = 0;
-        idx++;
-    }
-}
-
-
-void diff(int data[]){
-
-  for (i=0; i<(numThresh); i++) {
-    r_foo[i] = data[i+1] - data[i];
-  }
-}
-
-char updateBufferIdx(char size, char head) {
-   // manipulates buffer by updating head value
-   // then adding in new value for buffer head
-   head++;
-   if (head >= size) {
-      // wrap the head pointer around array
-      head = head - size;
-   }
-   return head;
-}
 
 // A utility function to swap two elements
 void swap(int* a, int* b)
@@ -538,7 +494,7 @@ void swap(int* a, int* b)
     *a = *b;
     *b = t;
 }
- 
+
 /* This function takes last element as pivot, places
    the pivot element at its correct position in sorted
     array, and places all smaller (smaller than pivot)
@@ -548,8 +504,8 @@ int partition (int arr[], int low, int high)
 {
     int pivot = arr[high];    // pivot
     int i = (low - 1);  // Index of smaller element
- 
-    for (int j = low; j <= high- 1; j++)
+    int j;
+    for (j = low; j <= high- 1; j++)
     {
         // If current element is smaller than or
         // equal to pivot
@@ -562,7 +518,7 @@ int partition (int arr[], int low, int high)
     swap(&arr[i + 1], &arr[high]);
     return (i + 1);
 }
- 
+
 /* The main function that implements QuickSort
  arr[] --> Array to be sorted,
   low  --> Starting index,
@@ -574,7 +530,7 @@ void quickSort(int arr[], int low, int high)
         /* pi is partitioning index, arr[p] is now
            at right place */
         int pi = partition(arr, low, high);
- 
+
         // Separately sort elements before
         // partition and after partition
         quickSort(arr, low, pi - 1);
@@ -582,19 +538,49 @@ void quickSort(int arr[], int low, int high)
     }
 }
 
-void computeAverage() {
+int computeAverage() {
   quickSort(avgHistory, 0, 17);
   int avg = 0;
   for (i=0; i < numHist; i++) {
-    // only do a for loop of 16 to get rid of 2 highest averages  
+    // only do a for loop of 16 to get rid of 2 highest averages
     avg += avgHistory[i];
   }
   avg = avg >> 4;
   return avg;
 }
 
+
+
+void HeightLearning(int curr, int min_th, int step) {
+  int i;
+  if (abs(curr) < abs(prev) && (abs(prev) > abs(min_th)) && (fall_flag == 0)) {
+    // Signal is falling but above the minimum threshold
+    countPeak[0]++;
+    th = min_th;
+    fall_flag = 1;
+    for (i=1; i < numThresh + 1; i++) {
+      th += step; 
+      if (abs(prev) > th) {
+        // previous value still above min threshold
+        countPeak[i]++;
+      } else {
+        break;
+      }
+    }
+  }
+
+  if ( (fall_flag == 1) && (abs(curr) > abs(prev)) ){
+    fall_flag = 0;
+  }
+
+  prev = curr;
+}
+
+
 void maxThreshMinThreshLearning() {
-  // r_foo has the differences between number of peaks in 
+  int j;
+  int i;
+  // r_foo has the differences between number of peaks in
   // each threshold
   for (i=0; i<(numThresh); i++) {
     r_foo[i] = countPeak[i+1] - countPeak[i];
@@ -624,19 +610,65 @@ void maxThreshMinThreshLearning() {
       break;
     }
   }
-  thresh = maxthresh + minthresh >> 1; // divide by 2
+  thresh = (abs(maxthresh + minthresh) >> 1) + (abs(maxthresh + minthresh) >> 2); // divide by 2
   // thresh = division((maxthresh + minthresh),2);
 }
 
-
-
-
-void precalc() {
-  max_th = ((max_val - sample_average) >> 1) + sample_average; // divide by two
+void calcMaxAndMinThreshold() {
+  max_th = (max_deviation >> 1); // divide by two
   // max_th = division(max_val, 2);
-  min_th = ((max_val - sample_average) >> 2) + sample_average; // divide by 4;
+  min_th = (max_deviation >> 2); // divide by 4;
   // min_th = division(max_val, 4);
-  temp = max_th - min_th;
+  temp = abs(max_th - min_th);
   step = temp >> 6; // divde by 32
   // step = division(temp, numThresh);
 }
+
+void NoiseLvlLearning(int data) {
+  if ((abs(data) < (minthresh >> 1)) && (abs(data) > noiselvl)) {
+    noiselvl = abs(data);
+  }
+}
+
+void detection(int data) {
+    // Find the beginning of a peak
+    if ((abs(data) < thresh) && (abs(data) > noiselvl) && (timeval > lastPI + PtoP) && (findEnd == 0) && (findPeak == 0)) {
+            if (idx < 5) {
+                startInd[idx] = timeval;
+            }
+            findPeak = 1;
+    }
+
+    // Find the peak
+    else if ((abs(data) > thresh) && (findPeak == 1) && (findEnd == 0)) {
+
+        if (idx < 5) {
+            peakInd[idx] = timeval;
+        }
+        lastPI = timeval;
+        P2OUT ^= BIT2;
+        findEnd = 1;
+        findPeak = 0;
+    }
+
+    // Find the end of a peak
+    else if ((abs(data) < noiselvl) && (timeval > lastPI + 80) && (findEnd == 1) && (findPeak == 0)) {
+        if (idx < 5) {
+            endInd[idx] = timeval;
+        }
+        findEnd = 0;
+        idx++;
+    }
+}
+
+char updateBufferIdx(char size, char head) {
+   // manipulates buffer by updating head value
+   // then adding in new value for buffer head
+   head++;
+   if (head >= size) {
+      // wrap the head pointer around array
+      head = head - size;
+   }
+   return head;
+}
+
