@@ -1,0 +1,27 @@
+%learn energy threshold value for 10 seconds
+   last_vals = zeros(1,20);
+   noiselvls = [];
+   count = 1;
+   for j = 1:length(data3)
+       k = data3(j);
+       
+       if count < 21
+           last_vals(count) = k;
+           
+       elseif (count > 20) && (k < d.minthresh) && (j < d.lastPI + d.VV)
+           noiselvls = [noiselvls mean(abs(last_vals))];
+           count = 0;
+           last_vals = zeros(1,20);
+       end
+       %new beat detected
+       if (k > d.thresh) && (j > d.lastPI + d.VV)
+           d.lastPI = j;
+       end
+       count = count + 1;
+       
+       
+
+       
+   end
+   
+   d.noiselvl = max(noiselvls);

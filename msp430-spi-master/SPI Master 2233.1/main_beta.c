@@ -253,6 +253,7 @@ int main(void)
 
     while(1){
       if (sample_ready) {
+        P2OUT |= BIT4;
         sample_ready = 0;
         int16_t sample = ADC10MEM;
         hist[histBufferIdx] = sample; // update the history buffer
@@ -339,12 +340,12 @@ int main(void)
       }
 
       if (rocky100_is_idle()) { // this is a bit comfusing. Don't worry about it
-        P2OUT |= BIT4;
+        // P2OUT |= BIT4;
         mcu_lpm_enter(3);//LPM3 keeps ACLK running
       }
       else
       {
-        P2OUT &= ~BIT4; // TOGGLE P2.4
+        // P2OUT &= ~BIT4; // TOGGLE P2.4
         mcu_lpm_enter(0);
     }
   }
@@ -610,7 +611,7 @@ void maxThreshMinThreshLearning() {
       break;
     }
   }
-  thresh = (abs(maxthresh + minthresh) >> 1) + (abs(maxthresh + minthresh) >> 2); // divide by 2
+  thresh = (abs(maxthresh + minthresh) >> 1) + (abs(maxthresh + minthresh) >> 3); // divide by 2
   // thresh = division((maxthresh + minthresh),2);
 }
 
