@@ -6,6 +6,7 @@
       "streambuf": "c",
       "xmemory0": "c",
       "ios": "c",
-      "xiosbase": "c"
+      "xiosbase": "c",
+      "cstdlib": "c"
    }
 }
